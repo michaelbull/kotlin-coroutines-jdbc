@@ -8,9 +8,10 @@ import java.sql.Connection
 import java.sql.SQLException
 import kotlin.coroutines.coroutineContext
 
-private val logger = InlineLogger()
+@PublishedApi
+internal val logger = InlineLogger()
 
-suspend fun <T> withConnection(block: suspend () -> T): T {
+suspend inline fun <T> withConnection(crossinline block: suspend () -> T): T {
     val connection = coroutineContext[CoroutineConnection]
 
     return if (connection.isNullOrClosed()) {
@@ -20,7 +21,8 @@ suspend fun <T> withConnection(block: suspend () -> T): T {
     }
 }
 
-private suspend fun <T> newConnection(block: suspend () -> T): T {
+@PublishedApi
+internal suspend inline fun <T> newConnection(crossinline block: suspend () -> T): T {
     val connection = coroutineContext.dataSource?.connection ?: error("No data source in context")
 
     return try {
@@ -32,8 +34,8 @@ private suspend fun <T> newConnection(block: suspend () -> T): T {
     }
 }
 
-@Suppress("NOTHING_TO_INLINE")
-private inline fun Connection?.isNullOrClosed(): Boolean {
+@PublishedApi
+internal fun Connection?.isNullOrClosed(): Boolean {
     return if (this == null) {
         true
     } else try {
@@ -53,7 +55,8 @@ internal fun Connection.rollbackCatching() {
     }
 }
 
-private fun Connection.closeCatching() {
+@PublishedApi
+internal fun Connection.closeCatching() {
     try {
         close()
     } catch (ex: SQLException) {

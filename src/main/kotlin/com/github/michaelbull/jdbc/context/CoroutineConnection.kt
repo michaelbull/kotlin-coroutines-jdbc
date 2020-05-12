@@ -7,7 +7,8 @@ import kotlin.coroutines.CoroutineContext
 val CoroutineContext.connection: Connection
     get() = get(CoroutineConnection) ?: error("No connection in context")
 
-class CoroutineConnection(
+@PublishedApi
+internal class CoroutineConnection(
     private val connection: Connection
 ) : AbstractCoroutineContextElement(CoroutineConnection), Connection by connection {
 

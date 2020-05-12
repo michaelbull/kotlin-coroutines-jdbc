@@ -6,24 +6,29 @@ import com.github.michaelbull.jdbc.context.transaction
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
 
-suspend fun <T> transaction(block: suspend () -> T): T {
+suspend inline fun <T> transaction(crossinline block: suspend () -> T): T {
     val existingTransaction = coroutineContext.transaction
 
     return when {
-        existingTransaction == null -> withContext(CoroutineTransaction()) { execute(block) }
+        existingTransaction == null -> withContext(CoroutineTransaction()) {
+            withConnection {
+                execute(block)
+            }
+        }
         existingTransaction.isRunning -> block()
         else -> error("Attempted to start new transaction within: $existingTransaction")
     }
 }
 
-private suspend fun <T> execute(block: suspend () -> T): T = withConnection {
+@PublishedApi
+internal suspend inline fun <T> execute(crossinline block: suspend () -> T): T {
     val transaction = coroutineContext.transaction ?: error("No transaction in context")
     transaction.start()
 
     val connection = coroutineContext.connection
     connection.autoCommit = false
 
-    try {
+    return try {
         block().also {
             transaction.complete()
             connection.commit()
