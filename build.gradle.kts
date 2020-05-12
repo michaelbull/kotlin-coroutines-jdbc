@@ -45,7 +45,10 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs = listOf("-Xuse-experimental=kotlin.contracts.ExperimentalContracts")
+    }
 }
 
 tasks.withType<Test> {

@@ -6,12 +6,18 @@ import com.github.michaelbull.logging.InlineLogger
 import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.SQLException
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.coroutines.coroutineContext
 
 @PublishedApi
 internal val logger = InlineLogger()
 
 suspend inline fun <T> withConnection(crossinline block: suspend () -> T): T {
+    contract {
+        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
+    }
+
     val connection = coroutineContext[CoroutineConnection]
 
     return if (connection.isNullOrClosed()) {
@@ -23,6 +29,10 @@ suspend inline fun <T> withConnection(crossinline block: suspend () -> T): T {
 
 @PublishedApi
 internal suspend inline fun <T> newConnection(crossinline block: suspend () -> T): T {
+    contract {
+        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
+    }
+
     val connection = coroutineContext.dataSource?.connection ?: error("No data source in context")
 
     return try {
@@ -36,6 +46,10 @@ internal suspend inline fun <T> newConnection(crossinline block: suspend () -> T
 
 @PublishedApi
 internal fun Connection?.isNullOrClosed(): Boolean {
+    contract {
+        returns(false) implies (this@isNullOrClosed != null)
+    }
+
     return if (this == null) {
         true
     } else try {
