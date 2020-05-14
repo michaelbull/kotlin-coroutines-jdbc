@@ -7,7 +7,7 @@ import kotlin.coroutines.CoroutineContext
 val CoroutineContext.dataSource: DataSource?
     get() = get(CoroutineDataSource)
 
-internal class CoroutineDataSource(
+class CoroutineDataSource(
     private val dataSource: DataSource
 ) : AbstractCoroutineContextElement(CoroutineDataSource), DataSource by dataSource {
 
