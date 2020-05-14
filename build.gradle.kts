@@ -73,7 +73,7 @@ val sourcesJar by tasks.registering(Jar::class) {
     group = LifecycleBasePlugin.BUILD_GROUP
     description = "Assembles a jar archive containing the main classes with sources."
     archiveClassifier.set("sources")
-    from(project.the<SourceSetContainer>().getByName("main").allSource)
+    from(sourceSets["main"].allSource)
 }
 
 publishing {
