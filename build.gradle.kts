@@ -14,10 +14,10 @@ fun BintrayExtension.pkg(configure: BintrayExtension.PackageConfig.() -> Unit) {
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.3.61"
-    id("com.github.ben-manes.versions") version "0.27.0"
-    id("com.jfrog.bintray") version "1.8.4"
-    id("org.jetbrains.dokka") version "0.10.0"
+    kotlin("jvm") version "1.3.72"
+    id("com.github.ben-manes.versions") version "0.28.0"
+    id("com.jfrog.bintray") version "1.8.5"
+    id("org.jetbrains.dokka") version "0.10.1"
     id("net.researchgate.release") version "2.8.1"
 }
 
@@ -30,9 +30,9 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger-jvm:1.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.6")
     testImplementation("io.mockk:mockk:1.9.3")
 }
 
