@@ -84,6 +84,7 @@ class Example(dataSource: DataSource) {
 }
 
 class Repository {
+
     suspend fun addCustomer(name: String) {
         coroutineContext.connection.prepareStatement("INSERT INTO customers VALUES (?)").use { stmt ->
             stmt.setString(1, name)
