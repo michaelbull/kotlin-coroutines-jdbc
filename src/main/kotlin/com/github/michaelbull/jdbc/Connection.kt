@@ -61,15 +61,6 @@ internal fun Connection?.isNullOrClosed(): Boolean {
 }
 
 @PublishedApi
-internal fun Connection.rollbackCatching() {
-    try {
-        rollback()
-    } catch (ex: Throwable) {
-        logger.warn(ex) { "Failed to rollback transaction:" }
-    }
-}
-
-@PublishedApi
 internal fun Connection.closeCatching() {
     try {
         close()

@@ -44,7 +44,7 @@ internal suspend inline fun <T> execute(crossinline block: suspend () -> T): T {
             connection.commit()
         }
     } catch (ex: Throwable) {
-        connection.rollbackCatching()
+        connection.rollback()
         throw ex
     }
 }
