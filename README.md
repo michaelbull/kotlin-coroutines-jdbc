@@ -28,25 +28,20 @@ suspend inline fun <T> transaction(crossinline block: suspend () -> T): T
 Calling this function with a specific suspending block will run the block in
 the context of a [`CoroutineTransaction`][CoroutineTransaction].
 
-Calls to `transaction` can be composed, and will re-use the existing
-`CoroutineTransaction`. Only the outermost call will either
-[`commit`][Connection.commit] or [`rollback`][Connection.rollback] the result.
-
-It is therefore safe to nest calls to `transaction`, or have functions compose
-of multiple calls to `transaction` without having to manage the boundaries of
-the transaction yourself.
+Calls to `transaction` can be nested inside another, with each child re-use the
+first `CoroutineTransaction`. Only the outermost call will either
+[`commit`][Connection.commit] or [`rollback`][Connection.rollback] the
+transaction.
 
 Starting a fresh transaction will add a
 [`CoroutineTransaction`][CoroutineTransaction] to the current
-[`CoroutineContext`][CoroutineContext]. A finite state machine backs each
-transaction to prevent it from being erroneously re-used after its completion.
+[`CoroutineContext`][CoroutineContext]. Transactions cannot be re-used after
+completion and attempting to do so will result in a runtime failure.
 
-A transaction will operate in the context of a [`Connection`][Connection].
-The `transaction` function adds a [`CoroutineConnection`][CoroutineConnection]
-to the active [`CoroutineContext`][CoroutineContext] if it is not already
-present or if the existing one [is closed][Connection.isClosed]. If the
-transaction establishes a new connection and is not re-using an existing one,
-it will attempt to cleanly close the connection within its completion state.
+A transaction will establish a new [`Connection`][Connection] if an open one
+does not already exist in the active [`CoroutineContext`][CoroutineContext].
+If the transaction does establish a new [`Connection`][Connection], it will
+attempt to [close][Connection.close] it upon completion.
 
 An active [`CoroutineConnection`][CoroutineConnection] is accessible from the
 current [`CoroutineContext`][CoroutineContext]. The connection from the context
@@ -55,14 +50,15 @@ can be used to [prepare statements][Connection.prepareStatement].
 ## Example
 
 ```kotlin
-import com.github.michaelbull.jdbc.context.connection
 import com.github.michaelbull.jdbc.context.CoroutineDataSource
+import com.github.michaelbull.jdbc.context.connection
 import com.github.michaelbull.jdbc.transaction
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import javax.sql.DataSource
 import kotlin.coroutines.coroutineContext
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.CoroutineScope
 
 class Example(dataSource: DataSource) {
 
@@ -122,6 +118,7 @@ This project is available under the terms of the ISC license. See the
 [transaction]: ./src/main/kotlin/com/github/michaelbull/jdbc/Transaction.kt
 [CoroutineTransaction]: ./src/main/kotlin/com/github/michaelbull/jdbc/context/CoroutineTransaction.kt
 [Connection]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html
+[Connection.close]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#close--
 [Connection.isClosed]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#isClosed--
 [Connection.commit]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#commit--
 [Connection.rollback]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#rollback--
