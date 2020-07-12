@@ -64,6 +64,7 @@ class Example(dataSource: DataSource) {
 
     private val dispatcher = Executors.newFixedThreadPool(8).asCoroutineDispatcher()
     private val scope = CoroutineScope(dispatcher + CoroutineDataSource(dataSource))
+    private val repository = Repository()
 
     fun query() {
         scope.launchTransaction()
@@ -76,19 +77,21 @@ class Example(dataSource: DataSource) {
 
     private suspend fun addThenFindAllCustomers(): List<String>  {
         return transaction {
-            addCustomer("example name")
-            findAllCustomers()
+            repository.addCustomer("example name")
+            repository.findAllCustomers()
         }
     }
+}
 
-    private suspend fun addCustomer(name: String) {
+class Repository {
+    suspend fun addCustomer(name: String) {
         coroutineContext.connection.prepareStatement("INSERT INTO customers VALUES (?)").use { stmt ->
             stmt.setString(1, name)
             stmt.executeUpdate()
         }
     }
 
-    private suspend fun findAllCustomers(): List<String> {
+    suspend fun findAllCustomers(): List<String> {
         val customers = mutableListOf<String>
 
         coroutineContext.connection.prepareStatement("SELECT name FROM customers").use { stmt ->
