@@ -54,16 +54,14 @@ import com.github.michaelbull.jdbc.context.CoroutineDataSource
 import com.github.michaelbull.jdbc.context.connection
 import com.github.michaelbull.jdbc.transaction
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executors
 import javax.sql.DataSource
 import kotlin.coroutines.coroutineContext
 
 class Example(dataSource: DataSource) {
 
-    private val dispatcher = Executors.newFixedThreadPool(8).asCoroutineDispatcher()
-    private val scope = CoroutineScope(dispatcher + CoroutineDataSource(dataSource))
+    private val scope = CoroutineScope(Dispatchers.IO + CoroutineDataSource(dataSource))
     private val repository = Repository()
 
     fun query() {
@@ -75,7 +73,7 @@ class Example(dataSource: DataSource) {
         customers.forEach(::println)
     }
 
-    private suspend fun addThenFindAllCustomers(): List<String>  {
+    private suspend fun addThenFindAllCustomers(): List<String> {
         return transaction {
             repository.addCustomer("example name")
             repository.findAllCustomers()
@@ -93,7 +91,7 @@ class Repository {
     }
 
     suspend fun findAllCustomers(): List<String> {
-        val customers = mutableListOf<String>
+        val customers = mutableListOf<String>()
 
         coroutineContext.connection.prepareStatement("SELECT name FROM customers").use { stmt ->
             stmt.executeQuery().use { rs ->
