@@ -106,6 +106,12 @@ class CustomerRepository {
 }
 ```
 
+## Further Reading
+
+- [andrewoma/coroutine-jdbc](https://github.com/andrewoma/coroutine-jdbc)
+- [Corotuine Context and Scope - Roman Elizarov](https://medium.com/@elizarov/coroutine-context-and-scope-c8b255d59055)
+- [Blocking threads, suspending coroutines - Roman Elizarov](https://medium.com/@elizarov/blocking-threads-suspending-coroutines-d33e11bf4761)
+
 ## Contributing
 
 Bug reports and pull requests are welcome on [GitHub][github].
