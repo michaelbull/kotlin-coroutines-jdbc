@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val ossrhUsername: String? by ext
 val ossrhPassword: String? by ext
 
-description = "TODO"
+description = "A library for interacting with blocking JDBC drivers using Kotlin Coroutines."
 
 plugins {
     `maven-publish`
