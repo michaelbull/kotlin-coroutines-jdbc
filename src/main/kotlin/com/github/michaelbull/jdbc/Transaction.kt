@@ -38,12 +38,13 @@ internal suspend inline fun <T> execute(crossinline block: suspend () -> T): T {
     val connection = coroutineContext.connection
     connection.autoCommit = false
 
-    return try {
-        block().also {
-            transaction.complete()
-            connection.commit()
-        }
+    try {
+        val result = block()
+        transaction.complete()
+        connection.commit()
+        return result
     } catch (ex: Throwable) {
+        transaction.complete()
         connection.rollback()
         throw ex
     }
