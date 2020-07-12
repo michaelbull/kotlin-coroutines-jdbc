@@ -62,7 +62,7 @@ import kotlin.coroutines.coroutineContext
 class Example(dataSource: DataSource) {
 
     private val scope = CoroutineScope(Dispatchers.IO + CoroutineDataSource(dataSource))
-    private val repository = Repository()
+    private val customers = CustomerRepository()
 
     fun query() {
         scope.launchTransaction()
@@ -75,22 +75,22 @@ class Example(dataSource: DataSource) {
 
     private suspend fun addThenFindAllCustomers(): List<String> {
         return transaction {
-            repository.addCustomer("example name")
-            repository.findAllCustomers()
+            customers.add("John Doe")
+            customers.findAll()
         }
     }
 }
 
-class Repository {
+class CustomerRepository {
 
-    suspend fun addCustomer(name: String) {
+    suspend fun add(name: String) {
         coroutineContext.connection.prepareStatement("INSERT INTO customers VALUES (?)").use { stmt ->
             stmt.setString(1, name)
             stmt.executeUpdate()
         }
     }
 
-    suspend fun findAllCustomers(): List<String> {
+    suspend fun findAll(): List<String> {
         val customers = mutableListOf<String>()
 
         coroutineContext.connection.prepareStatement("SELECT name FROM customers").use { stmt ->
