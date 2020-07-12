@@ -116,14 +116,16 @@ This project is available under the terms of the ISC license. See the
 [`LICENSE`](LICENSE) file for the copyright information and licensing terms.
 
 [github]: https://github.com/michaelbull/kotlin-coroutines-jdbc
+[transaction]: https://github.com/michaelbull/kotlin-coroutines-jdbc/blob/master/src/main/kotlin/com/github/michaelbull/jdbc/Transaction.kt
+[CoroutineTransaction]: https://github.com/michaelbull/kotlin-coroutines-jdbc/blob/master/src/main/kotlin/com/github/michaelbull/jdbc/context/CoroutineTransaction.kt
+[CoroutineConnection]: https://github.com/michaelbull/kotlin-coroutines-jdbc/blob/master/src/main/kotlin/com/github/michaelbull/jdbc/context/CoroutineConnection.kt
+
 [coroutines]: https://kotlinlang.org/docs/reference/coroutines-overview.html
-[transaction]: ./src/main/kotlin/com/github/michaelbull/jdbc/Transaction.kt
-[CoroutineTransaction]: ./src/main/kotlin/com/github/michaelbull/jdbc/context/CoroutineTransaction.kt
+[CoroutineContext]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/
+
 [Connection]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html
 [Connection.close]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#close--
 [Connection.isClosed]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#isClosed--
 [Connection.commit]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#commit--
 [Connection.rollback]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#rollback--
 [Connection.prepareStatement]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#prepareStatement-java.lang.String-
-[CoroutineConnection]: ./src/main/kotlin/com/github/michaelbull/jdbc/context/CoroutineConnection.kt
-[CoroutineContext]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/
