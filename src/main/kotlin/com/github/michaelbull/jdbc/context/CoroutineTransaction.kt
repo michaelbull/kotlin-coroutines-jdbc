@@ -13,7 +13,8 @@ internal class CoroutineTransaction : AbstractCoroutineContextElement(CoroutineT
 
     companion object Key : CoroutineContext.Key<CoroutineTransaction>
 
-    private var state: TransactionState = TransactionState.Idle
+    var state: TransactionState = TransactionState.Idle
+        private set
 
     val isRunning: Boolean
         get() = state == TransactionState.Running
