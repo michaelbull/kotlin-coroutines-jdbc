@@ -30,10 +30,10 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger-jvm:1.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.7")
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.6")
-    testImplementation("io.mockk:mockk:1.9.3")
+    testImplementation("io.mockk:mockk:1.10.0")
 }
 
 tasks.withType<DependencyUpdatesTask> {
