@@ -4,6 +4,11 @@
 
 A library for interacting with blocking JDBC drivers using [Kotlin Coroutines][coroutines].
 
+Use of this library allows you to offload blocking JDBC calls to a dedicated
+[`CoroutineDispatcher`][CoroutineDispatcher] (e.g.
+[`Dispatchers.IO`][Dispatchers.IO]), thus suspending your coroutine and freeing
+your thread for other work while waiting.
+
 ## Installation
 
 ```groovy
@@ -128,6 +133,8 @@ This project is available under the terms of the ISC license. See the
 
 [coroutines]: https://kotlinlang.org/docs/reference/coroutines-overview.html
 [CoroutineContext]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/
+[CoroutineDispatcher]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-dispatcher/index.html
+[Dispatchers.IO]: https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-dispatchers/-i-o.html
 
 [Connection]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html
 [Connection.close]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#close--
