@@ -33,8 +33,8 @@ suspend inline fun <T> transaction(crossinline block: suspend () -> T): T
 Calling this function with a specific suspending block will run the block in
 the context of a [`CoroutineTransaction`][CoroutineTransaction].
 
-Calls to `transaction` can be nested inside another, with each child re-use the
-first `CoroutineTransaction`. Only the outermost call will either
+Calls to `transaction` can be nested inside another, with each child re-using
+the first `CoroutineTransaction`. Only the outermost call will either
 [`commit`][Connection.commit] or [`rollback`][Connection.rollback] the
 transaction.
 
@@ -46,7 +46,7 @@ completion and attempting to do so will result in a runtime failure.
 A transaction will establish a new [`Connection`][Connection] if an open one
 does not already exist in the active [`CoroutineContext`][CoroutineContext].
 If the transaction does establish a new [`Connection`][Connection], it will
-attempt to [close][Connection.close] it upon completion.
+attempt to [`close`][Connection.close] it upon completion.
 
 An active [`CoroutineConnection`][CoroutineConnection] is accessible from the
 current [`CoroutineContext`][CoroutineContext]. The connection from the context
