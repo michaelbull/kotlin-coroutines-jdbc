@@ -4,6 +4,7 @@ import com.github.michaelbull.jdbc.context.CoroutineConnection
 import com.github.michaelbull.jdbc.context.CoroutineTransaction
 import com.github.michaelbull.jdbc.context.connection
 import com.github.michaelbull.jdbc.context.transaction
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
 import java.sql.Connection
 import kotlin.contracts.InvocationKind
@@ -26,7 +27,7 @@ import kotlin.coroutines.coroutineContext
  * the transaction will [rollback][Connection.rollback] and re-throw the [Throwable], otherwise the transaction will
  * [commit][Connection.commit] and return the result of type [T].
  */
-suspend inline fun <T> transaction(crossinline block: suspend () -> T): T {
+suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
@@ -39,7 +40,7 @@ suspend inline fun <T> transaction(crossinline block: suspend () -> T): T {
                 execute(block)
             }
         }
-        existingTransaction.isRunning -> block()
+        existingTransaction.isRunning -> block(CoroutineScope(coroutineContext))
         else -> error("Attempted to start new transaction within: $existingTransaction")
     }
 }
@@ -53,7 +54,7 @@ suspend inline fun <T> transaction(crossinline block: suspend () -> T): T {
  * [commit][Connection.commit].
  */
 @PublishedApi
-internal suspend inline fun <T> execute(crossinline block: suspend () -> T): T {
+internal suspend inline fun <T> execute(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
@@ -65,7 +66,7 @@ internal suspend inline fun <T> execute(crossinline block: suspend () -> T): T {
     connection.autoCommit = false
 
     try {
-        val result = block()
+        val result = block(CoroutineScope(coroutineContext))
         transaction.complete()
         connection.commit()
         return result

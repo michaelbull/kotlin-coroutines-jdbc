@@ -33,6 +33,19 @@ class ConnectionTest {
     }
 
     @Test
+    fun `no longer fails to get connection inside transaction block`() {
+        val context = CoroutineDataSource(dataSource)
+
+        runBlockingTest(context) {
+            transaction {
+                // this will fail unless transaction returns its own scope
+                // before the scope of runBlockingTest was used, which didn't have connection or transaction in context
+                coroutineContext.connection
+            }
+        }
+    }
+
+    @Test
     fun `withConnection should add new connection to context if absent`() {
         val context = CoroutineDataSource(dataSource)
 
