@@ -33,13 +33,18 @@ class ConnectionTest {
     }
 
     @Test
-    fun `no longer fails to get connection inside transaction block`() {
+    fun `no longer fails to get connection inside withConnection`() {
         val context = CoroutineDataSource(dataSource)
 
         runBlockingTest(context) {
-            transaction {
-                // this will fail unless transaction returns its own scope
-                // before the scope of runBlockingTest was used, which didn't have connection or transaction in context
+            withConnection {
+                // the code inside the connection block would use the CoroutineContext
+                // that was created before calling the withConnection function.
+
+                // This happened because `this` referred to the parent CoroutineScope.
+
+                // this will fail unless connection function returns its own scope
+                // the scope of runBlockingTest was used before, which didn't have connection in context
                 coroutineContext.connection
             }
         }

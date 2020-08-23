@@ -4,6 +4,7 @@ import com.github.michaelbull.jdbc.context.CoroutineConnection
 import com.github.michaelbull.jdbc.context.CoroutineDataSource
 import com.github.michaelbull.jdbc.context.dataSource
 import com.github.michaelbull.logging.InlineLogger
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.SQLException
@@ -27,7 +28,7 @@ internal val logger = InlineLogger()
  * [with the context][withContext] of a new [CoroutineConnection] and an attempt will be made to [Connection.close]
  * it afterwards.
  */
-suspend inline fun <T> withConnection(crossinline block: suspend () -> T): T {
+suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
@@ -37,7 +38,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend () -> T): T {
     return if (connection.isNullOrClosed()) {
         newConnection(block)
     } else {
-        block()
+        block(CoroutineScope(coroutineContext))
     }
 }
 
@@ -49,7 +50,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend () -> T): T {
  * [IllegalStateException] is thrown.
  */
 @PublishedApi
-internal suspend inline fun <T> newConnection(crossinline block: suspend () -> T): T {
+internal suspend inline fun <T> newConnection(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }

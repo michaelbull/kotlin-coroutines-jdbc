@@ -4,6 +4,7 @@ import com.github.michaelbull.jdbc.context.CoroutineConnection
 import com.github.michaelbull.jdbc.context.CoroutineDataSource
 import com.github.michaelbull.jdbc.context.CoroutineTransaction
 import com.github.michaelbull.jdbc.context.transaction
+import com.github.michaelbull.jdbc.context.connection
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -26,6 +27,24 @@ class TransactionTest {
 
     private val dataSource = mockk<DataSource>(relaxed = true).apply {
         every { connection } returns openConnection
+    }
+
+    @Test
+    fun `no longer fails to get connection inside transaction block`() {
+        val context = CoroutineDataSource(dataSource)
+
+        runBlockingTest(context) {
+            transaction {
+                // the code inside the transaction would use the CoroutineContext
+                // that was created before calling the transaction function.
+
+                // This happened because `this` referred to the parent CoroutineScope.
+
+                // this will fail unless transaction returns its own scope
+                // the scope of runBlockingTest was used before, which didn't have connection or transaction in context
+                coroutineContext.connection
+            }
+        }
     }
 
     @Test
