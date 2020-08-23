@@ -38,7 +38,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
     return if (connection.isNullOrClosed()) {
         newConnection(block)
     } else {
-        block(CoroutineScope(coroutineContext))
+        withContext(coroutineContext) { block() }
     }
 }
 

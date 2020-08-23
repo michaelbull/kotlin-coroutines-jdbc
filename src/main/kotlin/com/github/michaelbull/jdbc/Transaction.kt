@@ -40,7 +40,7 @@ suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() 
                 execute(block)
             }
         }
-        existingTransaction.isRunning -> block(CoroutineScope(coroutineContext))
+        existingTransaction.isRunning -> withContext(coroutineContext) { block() }
         else -> error("Attempted to start new transaction within: $existingTransaction")
     }
 }
@@ -66,7 +66,7 @@ internal suspend inline fun <T> execute(crossinline block: suspend CoroutineScop
     connection.autoCommit = false
 
     try {
-        val result = block(CoroutineScope(coroutineContext))
+        val result = withContext(coroutineContext) { block() }
         transaction.complete()
         connection.commit()
         return result
