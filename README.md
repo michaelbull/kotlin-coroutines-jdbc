@@ -27,7 +27,7 @@ The primary higher-order function exposed by the library is the
 [`transaction`][transaction] function.
 
 ```kotlin
-suspend inline fun <T> transaction(crossinline block: suspend () -> T): T
+suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T
 ```
 
 Calling this function with a specific suspending block will run the block in
