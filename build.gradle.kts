@@ -46,7 +46,6 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.withType<Test> {
-    failFast = true
     useJUnitPlatform()
 }
 
