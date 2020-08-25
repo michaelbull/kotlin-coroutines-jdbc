@@ -2,7 +2,7 @@ package com.github.michaelbull.jdbc.context
 
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -14,7 +14,9 @@ class CoroutineConnectionTest {
     @Test
     fun `connection throws IllegalStateException if not in context`() {
         assertThrows<IllegalStateException> {
-            runBlocking { coroutineContext.connection }
+            runBlockingTest {
+                coroutineContext.connection
+            }
         }
     }
 
@@ -22,7 +24,7 @@ class CoroutineConnectionTest {
     fun `connection returns connection if in context`() {
         val expected = mockk<Connection>()
 
-        runBlocking(CoroutineConnection(expected)) {
+        runBlockingTest(CoroutineConnection(expected)) {
             val actual = coroutineContext.connection
             assertEquals(expected, actual)
         }
