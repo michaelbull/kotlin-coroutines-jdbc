@@ -35,7 +35,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
 
     val connection = coroutineContext[CoroutineConnection]
 
-    return if (connection.isNullOrClosed()) {
+    return if (connection.isNullOrClosedCatching()) {
         newConnection(block)
     } else {
         withContext(coroutineContext) {
@@ -73,9 +73,9 @@ internal suspend inline fun <T> newConnection(crossinline block: suspend Corouti
  * [Throwable] exception that was thrown from the call to [Connection.isClosed] and assuming it to be `true`.
  */
 @PublishedApi
-internal fun Connection?.isNullOrClosed(): Boolean {
+internal fun Connection?.isNullOrClosedCatching(): Boolean {
     contract {
-        returns(false) implies (this@isNullOrClosed != null)
+        returns(false) implies (this@isNullOrClosedCatching != null)
     }
 
     return if (this == null) {
