@@ -17,16 +17,16 @@ import kotlin.coroutines.coroutineContext
 internal val logger = InlineLogger()
 
 /**
- * Calls the specified suspending [block] in the context of a [CoroutineConnection], suspends until it completes, and
- * returns the result.
+ * Calls the specified suspending [block] [with the context][withContext] of a [CoroutineConnection], suspends until it
+ * completes, and returns the result.
  *
- * When the [coroutineContext] has an [open connection][hasOpenConnection] the [block] will be immediately invoked
- * within that context.
+ * When the [coroutineContext] has an [open][hasOpenConnection] [Connection] the [block] will be immediately invoked
+ * [with that context][withContext].
  *
- * When the [coroutineContext] has no [Connection], or it [is closed][isClosedCatching], the [block] will be invoked in
- * the context of a new [Connection]. The new [Connection] will be created by the [DataSource] in the
- * [coroutineContext], throwing an [IllegalStateException] if no such [DataSource] exists. After the [block] is invoked,
- * the newly established [Connection] will be [closed][closeCatching].
+ * When the [coroutineContext] has no [Connection], or it [is closed][isClosedCatching], the [block] will be invoked
+ * [with the context][withContext] of a new [Connection]. The new [Connection] is established by the [DataSource] in the
+ * [coroutineContext], throwing an [IllegalStateException] if no [DataSource] is present within the context. After the
+ * [block] is invoked, the newly established [Connection] will be [closed][closeCatching].
  */
 suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
@@ -38,13 +38,13 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
             block()
         }
     } else {
-        val newConnection = coroutineContext.dataSource.connection
+        val connection = coroutineContext.dataSource.connection
 
-        withContext(CoroutineConnection(newConnection)) {
+        withContext(CoroutineConnection(connection)) {
             try {
                 block()
             } finally {
-                newConnection.closeCatching()
+                connection.closeCatching()
             }
         }
     }
