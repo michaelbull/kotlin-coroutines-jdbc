@@ -1,33 +1,21 @@
 package com.github.michaelbull.jdbc.context
 
-import com.github.michaelbull.jdbc.TransactionState
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
 @PublishedApi
-internal val CoroutineContext.transaction: CoroutineTransaction?
-    get() = get(CoroutineTransaction)
-
-@PublishedApi
-internal class CoroutineTransaction : AbstractCoroutineContextElement(CoroutineTransaction) {
+internal class CoroutineTransaction(
+    private var completed: Boolean = false
+) : AbstractCoroutineContextElement(CoroutineTransaction) {
 
     companion object Key : CoroutineContext.Key<CoroutineTransaction>
 
-    var state: TransactionState = TransactionState.Idle
-        private set
-
-    val isRunning: Boolean
-        get() = state == TransactionState.Running
-
-    fun start() {
-        check(state == TransactionState.Idle) { "cannot start: $this" }
-        state = TransactionState.Running
-    }
+    val incomplete: Boolean
+        get() = !completed
 
     fun complete() {
-        check(state == TransactionState.Running) { "cannot complete: $this" }
-        state = TransactionState.Completed
+        completed = true
     }
 
-    override fun toString(): String = "CoroutineTransaction(state=$state)"
+    override fun toString(): String = "CoroutineTransaction(completed=$completed)"
 }
