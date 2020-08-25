@@ -14,13 +14,13 @@ import kotlin.coroutines.coroutineContext
  * returns the result.
  *
  * When the [coroutineContext] has no [CoroutineTransaction], the specified suspending [block] will be
- * [ran transactionally][runTransactionally] [with the context of a connection][withConnection].
+ * [ran transactionally][runTransactionally] [with the context of a Connection][withConnection].
  *
  * When the [coroutineContext] has an [incomplete][CoroutineTransaction.incomplete] [CoroutineTransaction], the
  * specified suspending [block] will be called [with this context][withContext].
  *
  * When the [coroutineContext] has a [completed][CoroutineTransaction.completed] [CoroutineTransaction], an
- * [IllegalStateException] will be thrown.
+ * [IllegalStateException] will be thrown as the transaction cannot be re-used.
  */
 suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {

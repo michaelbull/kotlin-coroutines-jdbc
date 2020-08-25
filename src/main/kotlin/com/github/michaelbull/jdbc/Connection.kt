@@ -21,12 +21,12 @@ internal val logger = InlineLogger()
  * completes, and returns the result.
  *
  * When the [coroutineContext] has an [open][hasOpenConnection] [Connection], the specified suspending [block] will be
- * called immediately invoked [with this context][withContext].
+ * called [with this context][withContext].
  *
- * When the [coroutineContext] has no [Connection], or it [is closed][isClosedCatching], the [block] will be invoked
- * [with the context][withContext] of a new [Connection]. The new [Connection] is established by the [DataSource] in the
- * [coroutineContext], throwing an [IllegalStateException] if no [DataSource] is present within the context. After the
- * [block] is invoked, the newly established [Connection] will be [closed][closeCatching].
+ * When the [coroutineContext] has no [Connection], or it [is closed][isClosedCatching], the specified suspending
+ * [block] will be called [with the context][withContext] of a new [Connection]. This new [Connection] will be
+ * established from the [DataSource] in the [coroutineContext], or throw an [IllegalStateException] if no such
+ * [DataSource] exists, and will be [closed][closeCatching] after the specified suspending [block] completes.
  */
 suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
@@ -51,7 +51,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
 }
 
 /**
- * Returns `true` if this [CoroutineContext] container a [Connection] that is not [closed][isClosedCatching],
+ * Returns `true` if this [CoroutineContext] contains a [Connection] that is not [closed][isClosedCatching],
  * otherwise `false`.
  */
 @PublishedApi
