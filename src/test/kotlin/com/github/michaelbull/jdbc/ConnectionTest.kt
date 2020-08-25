@@ -12,12 +12,24 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource
 
 @ExperimentalCoroutinesApi
 class ConnectionTest {
+
+    @Test
+    fun `withConnection throws IllegalStateException if no connection & dataSource in context`() {
+        assertThrows<IllegalStateException> {
+            runBlockingTest {
+                withConnection {
+
+                }
+            }
+        }
+    }
 
     @Test
     fun `withConnection adds new connection to context if no connection in context`() {

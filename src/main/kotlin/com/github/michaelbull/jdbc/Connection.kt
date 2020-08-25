@@ -20,8 +20,8 @@ internal val logger = InlineLogger()
  * Calls the specified suspending [block] [with the context][withContext] of a [CoroutineConnection], suspends until it
  * completes, and returns the result.
  *
- * When the [coroutineContext] has an [open][hasOpenConnection] [Connection] the [block] will be immediately invoked
- * [with that context][withContext].
+ * When the [coroutineContext] has an [open][hasOpenConnection] [Connection], the specified suspending [block] will be
+ * called immediately invoked [with this context][withContext].
  *
  * When the [coroutineContext] has no [Connection], or it [is closed][isClosedCatching], the [block] will be invoked
  * [with the context][withContext] of a new [Connection]. The new [Connection] is established by the [DataSource] in the
