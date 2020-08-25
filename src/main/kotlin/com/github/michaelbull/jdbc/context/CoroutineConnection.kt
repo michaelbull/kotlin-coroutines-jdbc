@@ -5,12 +5,11 @@ import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
 val CoroutineContext.connection: Connection
-    get() = get(CoroutineConnection) ?: error("No connection in context")
+    get() = get(CoroutineConnection)?.connection ?: error("No connection in context")
 
-@PublishedApi
-internal class CoroutineConnection(
-    private val connection: Connection
-) : AbstractCoroutineContextElement(CoroutineConnection), Connection by connection {
+class CoroutineConnection(
+    val connection: Connection
+) : AbstractCoroutineContextElement(CoroutineConnection) {
 
     companion object Key : CoroutineContext.Key<CoroutineConnection>
 

@@ -22,7 +22,6 @@ class ConnectionTest {
     @Test
     fun `withConnection adds new connection to context if no connection in context`() {
         val newConnection = mockk<Connection> {
-            every { schema } returns "new"
             every { close() } just runs
         }
 
@@ -34,22 +33,20 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             val actual = withConnection {
-                coroutineContext.connection.schema
+                coroutineContext.connection
             }
 
-            assertEquals(newConnection.schema, actual)
+            assertEquals(newConnection, actual)
         }
     }
 
     @Test
     fun `withConnection adds new connection to context if existing connection isClosed returns true`() {
         val existingConnection = mockk<Connection> {
-            every { schema } returns "existing"
             every { isClosed } returns true
         }
 
         val newConnection = mockk<Connection> {
-            every { schema } returns "new"
             every { close() } just runs
         }
 
@@ -61,22 +58,20 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             val actual = withConnection {
-                coroutineContext.connection.schema
+                coroutineContext.connection
             }
 
-            assertEquals(newConnection.schema, actual)
+            assertEquals(newConnection, actual)
         }
     }
 
     @Test
     fun `withConnection adds new connection to context if existing connection isClosed throws exception`() {
         val existingConnection = mockk<Connection> {
-            every { schema } returns "existing"
             every { isClosed } throws SQLException()
         }
 
         val newConnection = mockk<Connection> {
-            every { schema } returns "new"
             every { close() } just runs
         }
 
@@ -88,17 +83,16 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             val actual = withConnection {
-                coroutineContext.connection.schema
+                coroutineContext.connection
             }
 
-            assertEquals(newConnection.schema, actual)
+            assertEquals(newConnection, actual)
         }
     }
 
     @Test
     fun `withConnection reuses existing connection in context if not closed`() {
         val existing = mockk<Connection> {
-            every { schema } returns "existing"
             every { isClosed } returns false
         }
 
@@ -107,17 +101,16 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             val actual = withConnection {
-                coroutineContext.connection.schema
+                coroutineContext.connection
             }
 
-            assertEquals(existing.schema, actual)
+            assertEquals(existing, actual)
         }
     }
 
     @Test
     fun `withConnection closes connection if added to context`() {
         val newConnection = mockk<Connection> {
-            every { schema } returns "new"
             every { close() } just runs
         }
 
@@ -137,7 +130,6 @@ class ConnectionTest {
     @Test
     fun `withConnection ignores SQLExceptions when closing connection added to context`() {
         val newConnection = mockk<Connection> {
-            every { schema } returns "new"
             every { close() } throws SQLException()
         }
 
@@ -157,7 +149,6 @@ class ConnectionTest {
     @Test
     fun `withConnection does not close connection if connection was not added to context`() {
         val existing = mockk<Connection> {
-            every { schema } returns "existing"
             every { isClosed } returns false
         }
 

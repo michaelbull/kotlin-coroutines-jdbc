@@ -33,7 +33,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
-    val connection = coroutineContext[CoroutineConnection]
+    val connection = coroutineContext[CoroutineConnection]?.connection
 
     return if (connection.isNullOrClosedCatching()) {
         newConnection(block)
@@ -57,7 +57,7 @@ internal suspend inline fun <T> newConnection(crossinline block: suspend Corouti
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
-    val connection = coroutineContext.dataSource?.connection ?: error("No data source in context")
+    val connection = coroutineContext.dataSource.connection
 
     return try {
         withContext(CoroutineConnection(connection)) {
