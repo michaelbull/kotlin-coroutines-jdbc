@@ -15,16 +15,15 @@ import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource
-import kotlin.coroutines.coroutineContext
 
 @ExperimentalCoroutinesApi
 class ConnectionTest {
 
-    private val openConnection = mockk<Connection>("OpenConnection", relaxed = true).apply {
+    private val openConnection = mockk<Connection>("OpenConnection", relaxed = true) {
         every { isClosed } returns false
     }
 
-    private val closedConnection = mockk<Connection>("ClosedConnection", relaxed = true).apply {
+    private val closedConnection = mockk<Connection>("ClosedConnection", relaxed = true) {
         every { isClosed } returns true
     }
 
@@ -38,7 +37,7 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             withConnection {
-                assertConnectionNotNull()
+                assertNotNull(coroutineContext.connection)
             }
         }
     }
@@ -50,8 +49,8 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             withConnection {
-                assertConnectionNotNull()
-                assertConnectionNotEquals(coroutineConnection)
+                assertNotNull(coroutineContext.connection)
+                assertNotEquals(coroutineConnection, coroutineContext.connection)
             }
         }
     }
@@ -65,7 +64,7 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             withConnection {
-                assertConnectionNotEquals(coroutineConnection)
+                assertNotEquals(coroutineConnection, coroutineContext.connection)
             }
         }
     }
@@ -77,7 +76,7 @@ class ConnectionTest {
 
         runBlockingTest(context) {
             withConnection {
-                assertConnectionEquals(coroutineConnection)
+                assertEquals(coroutineConnection, coroutineContext.connection)
             }
         }
     }
@@ -115,17 +114,5 @@ class ConnectionTest {
         }
 
         verify(exactly = 0) { openConnection.close() }
-    }
-
-    private suspend fun assertConnectionNotNull() {
-        assertNotNull(coroutineContext.connection)
-    }
-
-    private suspend fun assertConnectionEquals(expected: Connection) {
-        assertEquals(expected, coroutineContext.connection)
-    }
-
-    private suspend fun assertConnectionNotEquals(unexpected: Connection) {
-        assertNotEquals(unexpected, coroutineContext.connection)
     }
 }

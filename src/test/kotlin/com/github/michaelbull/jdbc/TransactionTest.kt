@@ -15,16 +15,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.sql.Connection
 import javax.sql.DataSource
-import kotlin.coroutines.coroutineContext
 
 @ExperimentalCoroutinesApi
 class TransactionTest {
 
-    private val openConnection = mockk<Connection>("OpenConnection", relaxed = true).apply {
+    private val openConnection = mockk<Connection>("OpenConnection", relaxed = true) {
         every { isClosed } returns false
     }
 
-    private val dataSource = mockk<DataSource>(relaxed = true).apply {
+    private val dataSource = mockk<DataSource>(relaxed = true) {
         every { connection } returns openConnection
     }
 
@@ -41,7 +40,8 @@ class TransactionTest {
     fun `transaction should add new transaction to context if absent`() {
         runBlockingTest(CoroutineDataSource(dataSource)) {
             transaction {
-                assertTransactionNotNull()
+                assertNotNull(coroutineContext.transaction)
+                Unit
             }
         }
     }
@@ -77,7 +77,8 @@ class TransactionTest {
 
         runBlockingTest(context) {
             transaction {
-                assertTransactionEquals(transaction)
+                assertEquals(transaction, coroutineContext.transaction)
+                Unit
             }
         }
     }
@@ -148,13 +149,5 @@ class TransactionTest {
                 }
             }
         }
-    }
-
-    private suspend fun assertTransactionNotNull() {
-        assertNotNull(coroutineContext.transaction)
-    }
-
-    private suspend fun assertTransactionEquals(expected: CoroutineTransaction) {
-        assertEquals(expected, coroutineContext.transaction)
     }
 }
