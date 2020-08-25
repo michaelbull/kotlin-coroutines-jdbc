@@ -1,13 +1,13 @@
 package com.github.michaelbull.jdbc
 
 import com.github.michaelbull.jdbc.context.CoroutineConnection
-import com.github.michaelbull.jdbc.context.CoroutineDataSource
 import com.github.michaelbull.jdbc.context.dataSource
 import com.github.michaelbull.logging.InlineLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.SQLException
+import javax.sql.DataSource
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.coroutines.CoroutineContext
@@ -20,77 +20,48 @@ internal val logger = InlineLogger()
  * Calls the specified suspending [block] in the context of a [CoroutineConnection], suspends until it completes, and
  * returns the result.
  *
- * When there exists a [CoroutineConnection] in the current [CoroutineContext], the [block] will be immediately invoked
- * if the [connection is not closed][Connection.isClosed].
+ * When the [coroutineContext] has an [open connection][hasOpenConnection] the [block] will be immediately invoked
+ * within that context.
  *
- * When there exists no [CoroutineConnection] in the current [CoroutineContext], or when the [CoroutineConnection] in
- * the current [CoroutineContext] is [closed][Connection.isClosed], the [block] will be invoked
- * [with the context][withContext] of a new [CoroutineConnection] and an attempt will be made to [Connection.close]
- * it afterwards.
+ * When the [coroutineContext] has no [Connection], or it [is closed][isClosedCatching], the [block] will be invoked in
+ * the context of a new [Connection]. The new [Connection] will be created by the [DataSource] in the
+ * [coroutineContext], throwing an [IllegalStateException] if no such [DataSource] exists. After the [block] is invoked,
+ * the newly established [Connection] will be [closed][closeCatching].
  */
 suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
-        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    val connection = coroutineContext[CoroutineConnection]?.connection
-
-    return if (connection.isNullOrClosedCatching()) {
-        newConnection(block)
-    } else {
+    return if (coroutineContext.hasOpenConnection()) {
         withContext(coroutineContext) {
             block()
         }
-    }
-}
+    } else {
+        val newConnection = coroutineContext.dataSource.connection
 
-/**
- * Calls the specified suspending [block] with the context of a new [CoroutineConnection], suspends until it completes,
- * attempts to [close][closeCatching] the [CoroutineConnection], and returns the result.
- *
- * If no [CoroutineDataSource] exists in the current [CoroutineContext] from which a [Connection] can be attained, an
- * [IllegalStateException] is thrown.
- */
-@PublishedApi
-internal suspend inline fun <T> newConnection(crossinline block: suspend CoroutineScope.() -> T): T {
-    contract {
-        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
-    }
-
-    val connection = coroutineContext.dataSource.connection
-
-    return try {
-        withContext(CoroutineConnection(connection)) {
-            block()
+        withContext(CoroutineConnection(newConnection)) {
+            try {
+                block()
+            } finally {
+                newConnection.closeCatching()
+            }
         }
-    } finally {
-        connection.closeCatching()
     }
 }
 
 /**
- * Returns `true` if this nullable [Connection] is either `null` or [isClosed][Connection.isClosed], catching any
- * [Throwable] exception that was thrown from the call to [Connection.isClosed] and assuming it to be `true`.
+ * Returns `true` if this [CoroutineContext] container a [Connection] that is not [closed][isClosedCatching],
+ * otherwise `false`.
  */
 @PublishedApi
-internal fun Connection?.isNullOrClosedCatching(): Boolean {
-    contract {
-        returns(false) implies (this@isNullOrClosedCatching != null)
-    }
-
-    return if (this == null) {
-        true
-    } else try {
-        isClosed
-    } catch (ex: SQLException) {
-        logger.warn(ex) { "Connection isNullOrClosed check failed, assuming closed:" }
-        true
-    }
+internal fun CoroutineContext.hasOpenConnection(): Boolean {
+    val connection = get(CoroutineConnection)?.connection
+    return connection != null && !connection.isClosedCatching()
 }
 
 /**
- * Calls [Connection.close] on this [Connection], catching any [Throwable] exception that was thrown from the call to
- * [Connection.close] and logging it.
+ * Calls [close][Connection.close] on this [Connection], catching any [SQLException] that was thrown and logging it.
  */
 @PublishedApi
 internal fun Connection.closeCatching() {
@@ -98,5 +69,19 @@ internal fun Connection.closeCatching() {
         close()
     } catch (ex: SQLException) {
         logger.warn(ex) { "Failed to close database connection cleanly:" }
+    }
+}
+
+/**
+ * Calls [isClosed][Connection.isClosed] on this [Connection] and returns its result, catching any [SQLException] that
+ * was thrown then logging it and returning `true`.
+ */
+@PublishedApi
+internal fun Connection.isClosedCatching(): Boolean {
+    return try {
+        isClosed
+    } catch (ex: SQLException) {
+        logger.warn(ex) { "Connection isClosedCatching check failed, assuming closed:" }
+        true
     }
 }
