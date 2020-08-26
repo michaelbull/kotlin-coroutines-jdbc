@@ -40,12 +40,12 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
     } else {
         val connection = coroutineContext.dataSource.connection
 
-        withContext(CoroutineConnection(connection)) {
-            try {
+        try {
+            withContext(CoroutineConnection(connection)) {
                 block()
-            } finally {
-                connection.closeCatching()
             }
+        } finally {
+            connection.closeCatching()
         }
     }
 }
