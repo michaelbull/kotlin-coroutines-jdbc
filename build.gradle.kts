@@ -111,6 +111,13 @@ publishing {
                     }
                 }
 
+                contributors {
+                    contributor {
+                        name.set("huntj88")
+                        url.set("https://github.com/huntj88")
+                    }
+                }
+
                 scm {
                     connection.set("scm:git:https://github.com/michaelbull/kotlin-coroutines-jdbc")
                     developerConnection.set("scm:git:git@github.com:michaelbull/kotlin-coroutines-jdbc.git")
