@@ -10,8 +10,8 @@ description = "A library for interacting with blocking JDBC drivers using Kotlin
 plugins {
     `maven-publish`
     signing
-    kotlin("jvm") version "1.4.0"
-    id("com.github.ben-manes.versions") version "0.29.0"
+    kotlin("jvm") version "1.4.21-2"
+    id("com.github.ben-manes.versions") version "0.36.0"
     id("org.jetbrains.dokka") version "0.10.1"
     id("net.researchgate.release") version "2.8.1"
 }
@@ -23,11 +23,11 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.9")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-    testImplementation("io.mockk:mockk:1.10.0")
+    implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.4.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
+    testImplementation("io.mockk:mockk:1.10.5")
 }
 
 tasks.withType<DependencyUpdatesTask> {
