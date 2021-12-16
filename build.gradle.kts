@@ -14,9 +14,9 @@ description = "A library for interacting with blocking JDBC drivers using Kotlin
 plugins {
     `maven-publish`
     signing
-    kotlin("jvm") version "1.4.21-2"
-    id("com.github.ben-manes.versions") version "0.36.0"
-    id("org.jetbrains.dokka") version "0.10.1"
+    kotlin("jvm") version "1.6.10"
+    id("com.github.ben-manes.versions") version "0.39.0"
+    id("org.jetbrains.dokka") version "1.6.0"
 }
 
 repositories {
@@ -26,11 +26,11 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.4.2")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
-    testImplementation("io.mockk:mockk:1.10.5")
+    implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation("io.mockk:mockk:1.12.1")
 }
 
 tasks.withType<DependencyUpdatesTask> {
@@ -52,17 +52,13 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-val dokka by tasks.existing(DokkaTask::class) {
-    outputFormat = "javadoc"
-    outputDirectory = "$buildDir/docs/javadoc"
-}
+val dokkaJavadoc by tasks.existing(DokkaTask::class)
 
 val javadocJar by tasks.registering(Jar::class) {
     group = LifecycleBasePlugin.BUILD_GROUP
     description = "Assembles a jar archive containing the Javadoc API documentation."
     archiveClassifier.set("javadoc")
-    dependsOn(dokka)
-    from(dokka.get().outputDirectory)
+    from(dokkaJavadoc)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
