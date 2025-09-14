@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.michael-bull.kotlin-coroutines-jdbc:kotlin-coroutines-jdbc:1.0.2")
+    implementation("com.michael-bull.kotlin-coroutines-jdbc:kotlin-coroutines-jdbc:1.0.3")
 }
 ```
 
