@@ -8,31 +8,29 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
-@ExperimentalCoroutinesApi
 class ConnectionTest {
 
     @Test
-    fun `withConnection throws IllegalStateException if no connection & dataSource in context`() {
-        assertThrows<IllegalStateException> {
-            runBlockingTest {
-                withConnection {
-
-                }
+    fun `withConnection throws IllegalStateException if no connection & dataSource in context`() = runTest {
+        assertFailsWith<IllegalStateException> {
+            withConnection {
+                /* empty */
             }
         }
     }
 
+
     @Test
-    fun `withConnection adds new connection to context if no connection in context`() {
+    fun `withConnection adds new connection to context if no connection in context`() = runTest {
         val newConnection = mockk<Connection> {
             every { close() } just runs
         }
@@ -41,9 +39,7 @@ class ConnectionTest {
             every { connection } returns newConnection
         }
 
-        val context = CoroutineDataSource(dataSource)
-
-        runBlockingTest(context) {
+        withContext(CoroutineDataSource(dataSource)) {
             val actual = withConnection {
                 coroutineContext.connection
             }
@@ -53,7 +49,7 @@ class ConnectionTest {
     }
 
     @Test
-    fun `withConnection adds new connection to context if existing connection isClosed returns true`() {
+    fun `withConnection adds new connection to context if existing connection isClosed returns true`() = runTest {
         val existingConnection = mockk<Connection> {
             every { isClosed } returns true
         }
@@ -66,9 +62,7 @@ class ConnectionTest {
             every { connection } returns newConnection
         }
 
-        val context = CoroutineDataSource(dataSource) + CoroutineConnection(existingConnection)
-
-        runBlockingTest(context) {
+        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existingConnection)) {
             val actual = withConnection {
                 coroutineContext.connection
             }
@@ -78,7 +72,7 @@ class ConnectionTest {
     }
 
     @Test
-    fun `withConnection adds new connection to context if existing connection isClosed throws exception`() {
+    fun `withConnection adds new connection to context if existing connection isClosed throws exception`() = runTest {
         val existingConnection = mockk<Connection> {
             every { isClosed } throws SQLException()
         }
@@ -91,9 +85,7 @@ class ConnectionTest {
             every { connection } returns newConnection
         }
 
-        val context = CoroutineDataSource(dataSource) + CoroutineConnection(existingConnection)
-
-        runBlockingTest(context) {
+        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existingConnection)) {
             val actual = withConnection {
                 coroutineContext.connection
             }
@@ -103,15 +95,14 @@ class ConnectionTest {
     }
 
     @Test
-    fun `withConnection reuses existing connection in context if not closed`() {
+    fun `withConnection reuses existing connection in context if not closed`() = runTest {
         val existing = mockk<Connection> {
             every { isClosed } returns false
         }
 
         val dataSource = mockk<DataSource>()
-        val context = CoroutineDataSource(dataSource) + CoroutineConnection(existing)
 
-        runBlockingTest(context) {
+        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existing)) {
             val actual = withConnection {
                 coroutineContext.connection
             }
@@ -121,7 +112,7 @@ class ConnectionTest {
     }
 
     @Test
-    fun `withConnection closes connection if added to context`() {
+    fun `withConnection closes connection if added to context`() = runTest {
         val newConnection = mockk<Connection> {
             every { close() } just runs
         }
@@ -132,15 +123,17 @@ class ConnectionTest {
 
         val context = CoroutineDataSource(dataSource)
 
-        runBlockingTest(context) {
-            withConnection { }
+        withContext(context) {
+            withConnection {
+                /* empty */
+            }
         }
 
         verify(exactly = 1) { newConnection.close() }
     }
 
     @Test
-    fun `withConnection ignores SQLExceptions when closing connection added to context`() {
+    fun `withConnection ignores SQLExceptions when closing connection added to context`() = runTest {
         val newConnection = mockk<Connection> {
             every { close() } throws SQLException()
         }
@@ -149,17 +142,17 @@ class ConnectionTest {
             every { connection } returns newConnection
         }
 
-        val context = CoroutineDataSource(dataSource)
-
-        runBlockingTest(context) {
-            withConnection { }
+        withContext(CoroutineDataSource(dataSource)) {
+            withConnection {
+                /* empty */
+            }
         }
 
         verify(exactly = 1) { newConnection.close() }
     }
 
     @Test
-    fun `withConnection does not close connection if connection was not added to context`() {
+    fun `withConnection does not close connection if connection was not added to context`() = runTest {
         val existing = mockk<Connection> {
             every { isClosed } returns false
         }
@@ -168,10 +161,10 @@ class ConnectionTest {
             every { connection } returns existing
         }
 
-        val context = CoroutineDataSource(dataSource) + CoroutineConnection(existing)
-
-        runBlockingTest(context) {
-            withConnection { }
+        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existing)) {
+            withConnection {
+                /* empty */
+            }
         }
 
         verify(exactly = 0) { existing.close() }

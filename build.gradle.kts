@@ -1,143 +1,105 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-import org.jetbrains.dokka.gradle.DokkaTask
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-val ossrhUsername: String? by project
-val ossrhPassword: String? by project
-
-val signingKeyId: String? by project // must be the last 8 digits of the key
-val signingKey: String? by project
-val signingPassword: String? by project
-
-description = "A library for interacting with blocking JDBC drivers using Kotlin Coroutines."
+import com.github.benmanes.gradle.versions.updates.gradle.GradleReleaseChannel
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinJvm
+import org.gradle.api.JavaVersion.VERSION_1_8
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
 plugins {
-    `maven-publish`
-    signing
-    kotlin("jvm") version "1.6.10"
-    id("com.github.ben-manes.versions") version "0.39.0"
-    id("org.jetbrains.dokka") version "1.6.0"
-}
-
-repositories {
-    mavenCentral()
-    jcenter()
-}
-
-dependencies {
-    implementation(kotlin("stdlib"))
-    implementation("com.michael-bull.kotlin-inline-logger:kotlin-inline-logger:1.0.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-    testImplementation("io.mockk:mockk:1.12.1")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.versions)
+    alias(libs.plugins.maven.publish)
 }
 
 tasks.withType<DependencyUpdatesTask> {
+    gradleReleaseChannel = GradleReleaseChannel.CURRENT.id
+
     rejectVersionIf {
-        listOf("alpha", "beta", "rc", "cr", "m", "eap", "pr").any {
+        listOf("alpha", "beta", "rc", "cr", "m", "eap", "pr", "dev").any {
             candidate.version.contains(it, ignoreCase = true)
         }
     }
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "1.8"
-        freeCompilerArgs = listOf("-Xuse-experimental=kotlin.contracts.ExperimentalContracts")
+tasks.withType<Jar> {
+    from(rootDir.resolve("LICENSE")) {
+        into("META-INF")
     }
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+java {
+    sourceCompatibility = VERSION_1_8
+    targetCompatibility = VERSION_1_8
 }
 
-val dokkaJavadoc by tasks.existing(DokkaTask::class)
-
-val javadocJar by tasks.registering(Jar::class) {
-    group = LifecycleBasePlugin.BUILD_GROUP
-    description = "Assembles a jar archive containing the Javadoc API documentation."
-    archiveClassifier.set("javadoc")
-    from(dokkaJavadoc)
-}
-
-val sourcesJar by tasks.registering(Jar::class) {
-    group = LifecycleBasePlugin.BUILD_GROUP
-    description = "Assembles a jar archive containing the main classes with sources."
-    archiveClassifier.set("sources")
-    from(sourceSets["main"].allSource)
-}
-
-publishing {
-    repositories {
-        maven {
-            if (project.version.toString().endsWith("SNAPSHOT")) {
-                setUrl("https://oss.sonatype.org/content/repositories/snapshots")
-            } else {
-                setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-            }
-
-            credentials {
-                username = ossrhUsername
-                password = ossrhPassword
-            }
-        }
+kotlin {
+    compilerOptions {
+        optIn.add("kotlin.contracts.ExperimentalContracts")
+        optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
+        jvmTarget.set(JVM_1_8)
     }
+}
 
-    publications {
-        register("mavenJava", MavenPublication::class) {
-            from(components["java"])
-            artifact(javadocJar.get())
-            artifact(sourcesJar.get())
+dependencies {
+    implementation(libs.kotlin.inline.logger)
+    implementation(libs.kotlin.coroutines.core)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.mockk)
+}
 
-            pom {
-                name.set(project.name)
-                description.set(project.description)
-                url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc")
-                inceptionYear.set("2019")
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
 
-                licenses {
-                    license {
-                        name.set("ISC License")
-                        url.set("https://opensource.org/licenses/isc-license.txt")
-                    }
-                }
+    configure(
+        KotlinJvm(
+            javadocJar = JavadocJar.Empty(),
+            sourcesJar = true,
+        )
+    )
 
-                developers {
-                    developer {
-                        name.set("Michael Bull")
-                        url.set("https://www.michael-bull.com")
-                    }
-                }
+    pom {
+        name.set(project.name)
+        description.set(project.description)
+        url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc")
+        inceptionYear.set("2019")
 
-                contributors {
-                    contributor {
-                        name.set("huntj88")
-                        url.set("https://github.com/huntj88")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:https://github.com/michaelbull/kotlin-coroutines-jdbc")
-                    developerConnection.set("scm:git:git@github.com:michaelbull/kotlin-coroutines-jdbc.git")
-                    url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc")
-                }
-
-                issueManagement {
-                    system.set("GitHub")
-                    url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc/issues")
-                }
-
-                ciManagement {
-                    system.set("GitHub")
-                    url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc/actions?query=workflow%3Aci")
-                }
+        licenses {
+            license {
+                name.set("ISC License")
+                url.set("https://opensource.org/licenses/isc-license.txt")
             }
         }
-    }
-}
 
-signing {
-    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-    sign(publishing.publications)
+        developers {
+            developer {
+                name.set("Michael Bull")
+                url.set("https://www.michael-bull.com")
+            }
+        }
+
+        contributors {
+            contributor {
+                name.set("huntj88")
+                url.set("https://github.com/huntj88")
+            }
+        }
+
+        scm {
+            connection.set("scm:git:https://github.com/michaelbull/kotlin-coroutines-jdbc")
+            developerConnection.set("scm:git:git@github.com:michaelbull/kotlin-coroutines-jdbc.git")
+            url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc")
+        }
+
+        issueManagement {
+            system.set("GitHub")
+            url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc/issues")
+        }
+
+        ciManagement {
+            system.set("GitHub")
+            url.set("https://github.com/michaelbull/kotlin-coroutines-jdbc/actions")
+        }
+    }
 }

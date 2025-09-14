@@ -1,30 +1,27 @@
 package com.github.michaelbull.jdbc.context
 
 import io.mockk.mockk
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import java.sql.Connection
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
-@ExperimentalCoroutinesApi
 class CoroutineConnectionTest {
 
     @Test
-    fun `connection throws IllegalStateException if not in context`() {
-        assertThrows<IllegalStateException> {
-            runBlockingTest {
-                coroutineContext.connection
-            }
+    fun `connection throws IllegalStateException if not in context`() = runTest {
+        assertFailsWith<IllegalStateException> {
+            coroutineContext.connection
         }
     }
 
     @Test
-    fun `connection returns connection if in context`() {
+    fun `connection returns connection if in context`() = runTest {
         val expected = mockk<Connection>()
 
-        runBlockingTest(CoroutineConnection(expected)) {
+        withContext(CoroutineConnection(expected)) {
             val actual = coroutineContext.connection
             assertEquals(expected, actual)
         }

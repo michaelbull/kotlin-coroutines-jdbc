@@ -8,29 +8,28 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import java.sql.Connection
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 @ExperimentalCoroutinesApi
 class TransactionTest {
 
     @Test
-    fun `nested transactions`() {
+    fun `nested transactions`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { isClosed } returns false
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
         val expected = (((((5 * 2) * 3) / 2) + 5) * 100) / 2
         var actual = 0
 
-        runBlockingTest(context) {
+        withContext(CoroutineConnection(connection)) {
             transaction {
                 actual = 5
 
@@ -64,10 +63,10 @@ class TransactionTest {
     }
 
     @Test
-    fun `transaction reuses existing transaction in context if incomplete`() {
+    fun `transaction reuses existing transaction in context if incomplete`() = runTest {
         val incompleteTransaction = CoroutineTransaction(completed = false)
 
-        runBlockingTest(incompleteTransaction) {
+        withContext(incompleteTransaction) {
             val actual = transaction {
                 coroutineContext[CoroutineTransaction]
             }
@@ -77,37 +76,35 @@ class TransactionTest {
     }
 
     @Test
-    fun `transaction throws IllegalStateException if existing transaction in context is completed`() {
+    fun `transaction throws IllegalStateException if existing transaction in context is completed`() = runTest {
         val completeTransaction = CoroutineTransaction(completed = true)
 
-        assertThrows<IllegalStateException> {
-            runBlockingTest(completeTransaction) {
-                transaction { }
-            }
-        }
-    }
-
-    @Test
-    fun `transaction throws IllegalStateException if context is empty`() {
-        assertThrows<IllegalStateException> {
-            runBlockingTest {
+        assertFailsWith<IllegalStateException> {
+            withContext(completeTransaction) {
                 transaction {
-
+                    /* empty */
                 }
             }
         }
     }
 
     @Test
-    fun `transaction adds new transaction to context if no transaction in context`() {
+    fun `transaction throws IllegalStateException if context is empty`() = runTest {
+        assertFailsWith<IllegalStateException> {
+            transaction {
+                /* empty */
+            }
+        }
+    }
+
+    @Test
+    fun `transaction adds new transaction to context if no transaction in context`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { isClosed } returns false
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
-        runBlockingTest(context) {
+        withContext(CoroutineConnection(connection)) {
             val transaction = transaction {
                 coroutineContext[CoroutineTransaction]
             }
@@ -117,14 +114,12 @@ class TransactionTest {
     }
 
     @Test
-    fun `runTransactionally adds new transaction to context`() {
+    fun `runTransactionally adds new transaction to context`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
-        runBlockingTest(context) {
+        withContext(CoroutineConnection(connection)) {
             val transaction = runTransactionally {
                 coroutineContext[CoroutineTransaction]
             }
@@ -134,14 +129,12 @@ class TransactionTest {
     }
 
     @Test
-    fun `runTransactionally calls commit on success`() {
+    fun `runTransactionally calls commit on success`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
-        runBlockingTest(context) {
+        withContext(CoroutineConnection(connection)) {
             runTransactionally {}
         }
 
@@ -149,72 +142,66 @@ class TransactionTest {
     }
 
     @Test
-    fun `runTransactionally does not call rollback on success`() {
+    fun `runTransactionally does not call rollback on success`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
-        runBlockingTest(context) {
-            runTransactionally {}
+        withContext(CoroutineConnection(connection)) {
+            runTransactionally {
+                /* empty */
+            }
         }
 
         verify(exactly = 0) { connection.rollback() }
     }
 
     @Test
-    fun `runTransactionally calls rollback on failure`() {
+    fun `runTransactionally calls rollback on failure`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
         try {
-            runBlockingTest(context) {
+            withContext(CoroutineConnection(connection)) {
                 runTransactionally {
                     throw Throwable()
                 }
             }
-        } catch (ignored: Throwable) {
-
+        } catch (_: Throwable) {
+            /* empty */
         }
 
         verify(exactly = 1) { connection.rollback() }
     }
 
     @Test
-    fun `runTransactionally does not call commit on failure`() {
+    fun `runTransactionally does not call commit on failure`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
         try {
-            runBlockingTest(context) {
+            withContext(CoroutineConnection(connection)) {
                 runTransactionally {
                     throw Throwable()
                 }
             }
-        } catch (ignored: Throwable) {
-
+        } catch (_: Throwable) {
+            /* empty */
         }
 
         verify(exactly = 0) { connection.commit() }
     }
 
     @Test
-    fun `runTransactionally rethrows exceptions`() {
+    fun `runTransactionally rethrows exceptions`() = runTest {
         val connection = mockk<Connection>(relaxed = true) {
             every { autoCommit } returns true
         }
 
-        val context = CoroutineConnection(connection)
-
-        assertThrows<IllegalArgumentException> {
-            runBlockingTest(context) {
+        assertFailsWith<IllegalArgumentException> {
+            withContext(CoroutineConnection(connection)) {
                 runTransactionally {
                     throw IllegalArgumentException()
                 }
@@ -241,7 +228,9 @@ class TransactionTest {
             every { autoCommit = any() } just runs
         }
 
-        connection.runWithManualCommit { }
+        connection.runWithManualCommit {
+            /* empty */
+        }
 
         verify(exactly = 1) { connection.autoCommit = true }
     }

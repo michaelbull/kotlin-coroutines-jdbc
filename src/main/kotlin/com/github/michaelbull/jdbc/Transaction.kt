@@ -3,23 +3,23 @@ package com.github.michaelbull.jdbc
 import com.github.michaelbull.jdbc.context.CoroutineTransaction
 import com.github.michaelbull.jdbc.context.connection
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import java.sql.Connection
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
-import kotlin.coroutines.coroutineContext
 
 /**
  * Calls the specified suspending [block] in the context of a [CoroutineTransaction], suspends until it completes, and
  * returns the result.
  *
- * When the [coroutineContext] has no [CoroutineTransaction], the specified suspending [block] will be
+ * When the [currentCoroutineContext] has no [CoroutineTransaction], the specified suspending [block] will be
  * [ran transactionally][runTransactionally] [with the context of a Connection][withConnection].
  *
- * When the [coroutineContext] has an [incomplete][CoroutineTransaction.incomplete] [CoroutineTransaction], the
+ * When the [currentCoroutineContext] has an [incomplete][CoroutineTransaction.incomplete] [CoroutineTransaction], the
  * specified suspending [block] will be called [with this context][withContext].
  *
- * When the [coroutineContext] has a [completed][CoroutineTransaction.completed] [CoroutineTransaction], an
+ * When the [currentCoroutineContext] has a [completed][CoroutineTransaction.completed] [CoroutineTransaction], an
  * [IllegalStateException] will be thrown as the transaction cannot be re-used.
  */
 suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T {
@@ -27,7 +27,8 @@ suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() 
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
-    val existingTransaction = coroutineContext[CoroutineTransaction]
+    val ctx = currentCoroutineContext()
+    val existingTransaction = ctx[CoroutineTransaction]
 
     return when {
         existingTransaction == null -> {
@@ -39,7 +40,7 @@ suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() 
         }
 
         existingTransaction.incomplete -> {
-            withContext(coroutineContext) {
+            withContext(ctx) {
                 block()
             }
         }
@@ -64,7 +65,7 @@ internal suspend inline fun <T> runTransactionally(crossinline block: suspend Co
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    coroutineContext.connection.runWithManualCommit {
+    currentCoroutineContext().connection.runWithManualCommit {
         val transaction = CoroutineTransaction()
 
         try {
