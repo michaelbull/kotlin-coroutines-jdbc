@@ -1,6 +1,8 @@
 # kotlin-coroutines-jdbc
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.michael-bull.kotlin-coroutines-jdbc/kotlin-coroutines-jdbc.svg)](https://search.maven.org/search?q=g:com.michael-bull.kotlin-coroutines-jdbc) [![CI Status](https://github.com/michaelbull/kotlin-coroutines-jdbc/workflows/ci/badge.svg)](https://github.com/michaelbull/kotlin-coroutines-jdbc/actions?query=workflow%3Aci) [![License](https://img.shields.io/github/license/michaelbull/kotlin-coroutines-jdbc.svg)](https://github.com/michaelbull/kotlin-coroutines-jdbc/blob/master/LICENSE)
+[![Maven Central](https://img.shields.io/maven-central/v/com.michael-bull.kotlin-coroutines-jdbc/kotlin-coroutines-jdbc.svg)](https://search.maven.org/search?q=g:com.michael-bull.kotlin-coroutines-jdbc)
+[![CI](https://github.com/michaelbull/kotlin-coroutines-jdbc/actions/workflows/ci.yaml/badge.svg)](https://github.com/michaelbull/kotlin-coroutines-jdbc/actions/workflows/ci.yaml)
+[![License](https://img.shields.io/github/license/michaelbull/kotlin-coroutines-jdbc.svg)](https://github.com/michaelbull/kotlin-coroutines-jdbc/blob/master/LICENSE)
 
 A library for interacting with blocking JDBC drivers using [Kotlin Coroutines][coroutines].
 
