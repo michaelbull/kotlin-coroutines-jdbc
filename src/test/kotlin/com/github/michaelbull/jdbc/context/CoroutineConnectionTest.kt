@@ -21,9 +21,10 @@ class CoroutineConnectionTest {
     fun `connection returns connection if in context`() = runTest {
         val expected = mockk<Connection>()
 
-        withContext(CoroutineConnection(expected)) {
-            val actual = coroutineContext.connection
-            assertEquals(expected, actual)
+        val actual = withContext(CoroutineConnection(expected)) {
+            coroutineContext.connection
         }
+
+        assertEquals(expected, actual)
     }
 }

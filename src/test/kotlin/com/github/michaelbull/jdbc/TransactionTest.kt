@@ -2,6 +2,7 @@ package com.github.michaelbull.jdbc
 
 import com.github.michaelbull.jdbc.context.CoroutineConnection
 import com.github.michaelbull.jdbc.context.CoroutineTransaction
+import com.github.michaelbull.jdbc.context.transaction
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -66,13 +67,13 @@ class TransactionTest {
     fun `transaction reuses existing transaction in context if incomplete`() = runTest {
         val incompleteTransaction = CoroutineTransaction(completed = false)
 
-        withContext(incompleteTransaction) {
-            val actual = transaction {
-                coroutineContext[CoroutineTransaction]
+        val actual = withContext(incompleteTransaction) {
+            transaction {
+                coroutineContext.transaction
             }
-
-            assertEquals(incompleteTransaction, actual)
         }
+
+        assertEquals(incompleteTransaction, actual)
     }
 
     @Test
@@ -104,13 +105,13 @@ class TransactionTest {
             every { autoCommit } returns true
         }
 
-        withContext(CoroutineConnection(connection)) {
-            val transaction = transaction {
-                coroutineContext[CoroutineTransaction]
+        val actual = withContext(CoroutineConnection(connection)) {
+            transaction {
+                coroutineContext.transaction
             }
-
-            assertNotNull(transaction)
         }
+
+        assertNotNull(actual)
     }
 
     @Test
@@ -119,13 +120,13 @@ class TransactionTest {
             every { autoCommit } returns true
         }
 
-        withContext(CoroutineConnection(connection)) {
-            val transaction = runTransactionally {
-                coroutineContext[CoroutineTransaction]
+        val actual = withContext(CoroutineConnection(connection)) {
+            runTransactionally {
+                coroutineContext.transaction
             }
-
-            assertNotNull(transaction)
         }
+
+        assertNotNull(actual)
     }
 
     @Test
@@ -135,7 +136,9 @@ class TransactionTest {
         }
 
         withContext(CoroutineConnection(connection)) {
-            runTransactionally {}
+            runTransactionally {
+                /* empty */
+            }
         }
 
         verify(exactly = 1) { connection.commit() }

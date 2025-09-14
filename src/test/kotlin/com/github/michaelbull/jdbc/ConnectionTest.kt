@@ -39,18 +39,18 @@ class ConnectionTest {
             every { connection } returns newConnection
         }
 
-        withContext(CoroutineDataSource(dataSource)) {
-            val actual = withConnection {
+        val actual = withContext(CoroutineDataSource(dataSource)) {
+            withConnection {
                 coroutineContext.connection
             }
-
-            assertEquals(newConnection, actual)
         }
+
+        assertEquals(newConnection, actual)
     }
 
     @Test
     fun `withConnection adds new connection to context if existing connection isClosed returns true`() = runTest {
-        val existingConnection = mockk<Connection> {
+        val closedConnection = mockk<Connection> {
             every { isClosed } returns true
         }
 
@@ -62,18 +62,18 @@ class ConnectionTest {
             every { connection } returns newConnection
         }
 
-        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existingConnection)) {
-            val actual = withConnection {
+        val actual = withContext(CoroutineDataSource(dataSource) + CoroutineConnection(closedConnection)) {
+            withConnection {
                 coroutineContext.connection
             }
-
-            assertEquals(newConnection, actual)
         }
+
+        assertEquals(newConnection, actual)
     }
 
     @Test
     fun `withConnection adds new connection to context if existing connection isClosed throws exception`() = runTest {
-        val existingConnection = mockk<Connection> {
+        val brokenConnection = mockk<Connection> {
             every { isClosed } throws SQLException()
         }
 
@@ -85,30 +85,30 @@ class ConnectionTest {
             every { connection } returns newConnection
         }
 
-        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existingConnection)) {
-            val actual = withConnection {
+        val actual = withContext(CoroutineDataSource(dataSource) + CoroutineConnection(brokenConnection)) {
+            withConnection {
                 coroutineContext.connection
             }
-
-            assertEquals(newConnection, actual)
         }
+
+        assertEquals(newConnection, actual)
     }
 
     @Test
-    fun `withConnection reuses existing connection in context if not closed`() = runTest {
-        val existing = mockk<Connection> {
+    fun `withConnection reuses open connection`() = runTest {
+        val openConnection = mockk<Connection> {
             every { isClosed } returns false
         }
 
         val dataSource = mockk<DataSource>()
 
-        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existing)) {
-            val actual = withConnection {
+        val actual = withContext(CoroutineDataSource(dataSource) + CoroutineConnection(openConnection)) {
+            withConnection {
                 coroutineContext.connection
             }
-
-            assertEquals(existing, actual)
         }
+
+        assertEquals(openConnection, actual)
     }
 
     @Test
@@ -153,20 +153,20 @@ class ConnectionTest {
 
     @Test
     fun `withConnection does not close connection if connection was not added to context`() = runTest {
-        val existing = mockk<Connection> {
+        val openConnection = mockk<Connection> {
             every { isClosed } returns false
         }
 
         val dataSource = mockk<DataSource> {
-            every { connection } returns existing
+            every { connection } returns openConnection
         }
 
-        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(existing)) {
+        withContext(CoroutineDataSource(dataSource) + CoroutineConnection(openConnection)) {
             withConnection {
                 /* empty */
             }
         }
 
-        verify(exactly = 0) { existing.close() }
+        verify(exactly = 0) { openConnection.close() }
     }
 }

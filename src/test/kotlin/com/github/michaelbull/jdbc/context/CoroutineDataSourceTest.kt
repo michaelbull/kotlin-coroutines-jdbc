@@ -21,9 +21,10 @@ class CoroutineDataSourceTest {
     fun `dataSource returns connection if in context`() = runTest {
         val expected = mockk<DataSource>()
 
-        withContext(CoroutineDataSource(expected)) {
-            val actual = coroutineContext.dataSource
-            assertEquals(expected, actual)
+        val actual = withContext(CoroutineDataSource(expected)) {
+            coroutineContext.dataSource
         }
+
+        assertEquals(expected, actual)
     }
 }

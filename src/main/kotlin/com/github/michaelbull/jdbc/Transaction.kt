@@ -2,6 +2,7 @@ package com.github.michaelbull.jdbc
 
 import com.github.michaelbull.jdbc.context.CoroutineTransaction
 import com.github.michaelbull.jdbc.context.connection
+import com.github.michaelbull.jdbc.context.transaction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
@@ -28,7 +29,7 @@ suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() 
     }
 
     val ctx = currentCoroutineContext()
-    val existingTransaction = ctx[CoroutineTransaction]
+    val existingTransaction = ctx.transaction
 
     return when {
         existingTransaction == null -> {

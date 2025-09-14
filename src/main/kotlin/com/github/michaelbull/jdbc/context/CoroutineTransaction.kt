@@ -4,8 +4,12 @@ import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
 @PublishedApi
+internal val CoroutineContext.transaction: CoroutineTransaction?
+    get() = get(CoroutineTransaction)
+
+@PublishedApi
 internal class CoroutineTransaction(
-    private var completed: Boolean = false
+    private var completed: Boolean = false,
 ) : AbstractCoroutineContextElement(CoroutineTransaction) {
 
     companion object Key : CoroutineContext.Key<CoroutineTransaction>
