@@ -35,7 +35,6 @@ java {
 kotlin {
     compilerOptions {
         optIn.add("kotlin.contracts.ExperimentalContracts")
-        optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
         jvmTarget.set(JVM_1_8)
     }
 }
