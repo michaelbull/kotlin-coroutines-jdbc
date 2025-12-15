@@ -2,8 +2,6 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.benmanes.gradle.versions.updates.gradle.GradleReleaseChannel
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinJvm
-import org.gradle.api.JavaVersion.VERSION_1_8
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -27,15 +25,11 @@ tasks.withType<Jar> {
     }
 }
 
-java {
-    sourceCompatibility = VERSION_1_8
-    targetCompatibility = VERSION_1_8
-}
-
 kotlin {
+    jvmToolchain(8)
+
     compilerOptions {
         optIn.add("kotlin.contracts.ExperimentalContracts")
-        jvmTarget.set(JVM_1_8)
     }
 }
 
