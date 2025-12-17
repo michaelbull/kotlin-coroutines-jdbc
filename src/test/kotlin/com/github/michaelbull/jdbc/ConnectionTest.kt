@@ -169,4 +169,22 @@ class ConnectionTest {
 
         verify(exactly = 0) { openConnection.close() }
     }
+
+    @Test
+    fun `currentConnection returns connection from context`() = runTest {
+        val connection = mockk<Connection>()
+
+        val actual = withContext(CoroutineConnection(connection)) {
+            currentConnection()
+        }
+
+        assertEquals(connection, actual)
+    }
+
+    @Test
+    fun `currentConnection throws IllegalStateException if no connection in context`() = runTest {
+        assertFailsWith<IllegalStateException> {
+            currentConnection()
+        }
+    }
 }

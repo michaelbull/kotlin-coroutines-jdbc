@@ -1,6 +1,7 @@
 package com.github.michaelbull.jdbc
 
 import com.github.michaelbull.jdbc.context.CoroutineConnection
+import com.github.michaelbull.jdbc.context.connection
 import com.github.michaelbull.jdbc.context.dataSource
 import com.github.michaelbull.logging.InlineLogger
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +52,14 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
             connection.closeCatching()
         }
     }
+}
+
+/**
+ * Returns the [Connection] in the [currentCoroutineContext], or throws an [IllegalStateException] if no such
+ * [Connection] exists.
+ */
+suspend fun currentConnection(): Connection {
+    return currentCoroutineContext().connection
 }
 
 /**
