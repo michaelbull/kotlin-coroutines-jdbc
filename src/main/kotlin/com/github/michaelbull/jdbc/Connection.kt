@@ -4,6 +4,7 @@ import com.github.michaelbull.jdbc.context.CoroutineConnection
 import com.github.michaelbull.jdbc.context.dataSource
 import com.github.michaelbull.logging.InlineLogger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import java.sql.Connection
@@ -17,11 +18,11 @@ import kotlin.coroutines.CoroutineContext
 internal val logger = InlineLogger()
 
 /**
- * Calls the specified suspending [block] [with the context][withContext] of a [CoroutineConnection], suspends until it
- * completes, and returns the result.
+ * Calls the specified suspending [block] with a [CoroutineConnection] in scope, suspends until it completes, and
+ * returns the result.
  *
  * When the [currentCoroutineContext] has an [open][hasOpenConnection] [Connection], the specified suspending [block]
- * will be called [with this context][withContext].
+ * will be called within a new [coroutineScope].
  *
  * When the [currentCoroutineContext] has no [Connection], or it [is closed][isClosedCatching], the specified suspending
  * [block] will be called [with the context][withContext] of a new [Connection]. This new [Connection] will be
@@ -36,7 +37,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
     val ctx = currentCoroutineContext()
 
     return if (ctx.hasOpenConnection()) {
-        withContext(currentCoroutineContext()) {
+        coroutineScope {
             block()
         }
     } else {

@@ -4,6 +4,7 @@ import com.github.michaelbull.jdbc.context.CoroutineTransaction
 import com.github.michaelbull.jdbc.context.connection
 import com.github.michaelbull.jdbc.context.transaction
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import java.sql.Connection
@@ -18,7 +19,7 @@ import kotlin.contracts.contract
  * [ran transactionally][runTransactionally] [with the context of a Connection][withConnection].
  *
  * When the [currentCoroutineContext] has an [incomplete][CoroutineTransaction.incomplete] [CoroutineTransaction], the
- * specified suspending [block] will be called [with this context][withContext].
+ * specified suspending [block] will be called within a new [coroutineScope].
  *
  * When the [currentCoroutineContext] has a [completed][CoroutineTransaction.completed] [CoroutineTransaction], an
  * [IllegalStateException] will be thrown as the transaction cannot be re-used.
@@ -28,8 +29,7 @@ suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() 
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
-    val ctx = currentCoroutineContext()
-    val existingTransaction = ctx.transaction
+    val existingTransaction = currentCoroutineContext().transaction
 
     return when {
         existingTransaction == null -> {
@@ -41,7 +41,7 @@ suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() 
         }
 
         existingTransaction.incomplete -> {
-            withContext(ctx) {
+            coroutineScope {
                 block()
             }
         }
