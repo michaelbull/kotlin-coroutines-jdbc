@@ -1,7 +1,6 @@
 package com.github.michaelbull.jdbc
 
 import com.github.michaelbull.jdbc.context.CoroutineTransaction
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
@@ -16,16 +15,16 @@ import kotlin.contracts.contract
  * Throws an [IllegalStateException] if the [currentCoroutineContext] already has a [CoroutineTransaction], as
  * transactions cannot be nested.
  */
-public suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T {
+public suspend inline fun <T> transaction(crossinline block: suspend () -> T): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
     checkOutsideTransaction()
 
-    return withConnection { connection ->
-        connection.withManualCommit {
-            connection.commitOrRollback(block)
+    return withConnection {
+        withManualCommit {
+            commitOrRollback(block)
         }
     }
 }
@@ -39,7 +38,7 @@ public suspend inline fun <T> transaction(crossinline block: suspend CoroutineSc
  */
 public suspend inline fun <T> isolatedTransaction(
     isolationLevel: Int,
-    crossinline block: suspend CoroutineScope.() -> T,
+    crossinline block: suspend () -> T,
 ): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
@@ -47,10 +46,10 @@ public suspend inline fun <T> isolatedTransaction(
 
     checkOutsideTransaction()
 
-    return withConnection { connection ->
-        connection.withIsolation(isolationLevel) {
-            connection.withManualCommit {
-                connection.commitOrRollback(block)
+    return withConnection {
+        withIsolation(isolationLevel) {
+            withManualCommit {
+                commitOrRollback(block)
             }
         }
     }
@@ -63,17 +62,17 @@ public suspend inline fun <T> isolatedTransaction(
  * Throws an [IllegalStateException] if the [currentCoroutineContext] already has a [CoroutineTransaction], as
  * transactions cannot be nested.
  */
-public suspend inline fun <T> readOnlyTransaction(crossinline block: suspend CoroutineScope.() -> T): T {
+public suspend inline fun <T> readOnlyTransaction(crossinline block: suspend () -> T): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
 
     checkOutsideTransaction()
 
-    return withConnection { connection ->
-        connection.withReadOnly {
-            connection.withManualCommit {
-                connection.commitOrRollback(block)
+    return withConnection {
+        withReadOnly {
+            withManualCommit {
+                commitOrRollback(block)
             }
         }
     }
@@ -89,7 +88,7 @@ public suspend inline fun <T> readOnlyTransaction(crossinline block: suspend Cor
  */
 public suspend inline fun <T> isolatedReadOnlyTransaction(
     isolationLevel: Int,
-    crossinline block: suspend CoroutineScope.() -> T,
+    crossinline block: suspend () -> T,
 ): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
@@ -97,11 +96,11 @@ public suspend inline fun <T> isolatedReadOnlyTransaction(
 
     checkOutsideTransaction()
 
-    return withConnection { connection ->
-        connection.withIsolation(isolationLevel) {
-            connection.withReadOnly {
-                connection.withManualCommit {
-                    connection.commitOrRollback(block)
+    return withConnection {
+        withIsolation(isolationLevel) {
+            withReadOnly {
+                withManualCommit {
+                    commitOrRollback(block)
                 }
             }
         }
@@ -126,7 +125,7 @@ internal suspend fun checkOutsideTransaction() {
  * calls [commit][Connection.commit] on success or [rollback][Connection.rollback] on failure.
  */
 @PublishedApi
-internal suspend inline fun <T> Connection.commitOrRollback(crossinline block: suspend CoroutineScope.() -> T): T {
+internal suspend inline fun <T> Connection.commitOrRollback(crossinline block: suspend () -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }

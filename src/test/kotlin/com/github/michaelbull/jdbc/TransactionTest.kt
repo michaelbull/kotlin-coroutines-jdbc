@@ -5,6 +5,7 @@ import com.github.michaelbull.jdbc.context.CoroutineTransaction
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import java.sql.Connection
@@ -63,7 +64,7 @@ class TransactionTest {
 
         val actual = withContext(CoroutineConnection(connection)) {
             transaction {
-                coroutineContext[CoroutineTransaction]
+                currentCoroutineContext()[CoroutineTransaction]
             }
         }
 

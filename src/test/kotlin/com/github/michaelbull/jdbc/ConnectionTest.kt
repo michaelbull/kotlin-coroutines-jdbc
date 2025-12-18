@@ -2,7 +2,6 @@ package com.github.michaelbull.jdbc
 
 import com.github.michaelbull.jdbc.context.CoroutineConnection
 import com.github.michaelbull.jdbc.context.CoroutineDataSource
-import com.github.michaelbull.jdbc.context.connection
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -43,7 +42,7 @@ class ConnectionTest {
 
         val actual = withContext(CoroutineDataSource(dataSource)) {
             withConnection {
-                coroutineContext.connection
+                this
             }
         }
 
@@ -66,7 +65,7 @@ class ConnectionTest {
 
         val actual = withContext(CoroutineDataSource(dataSource) + CoroutineConnection(closedConnection)) {
             withConnection {
-                coroutineContext.connection
+                this
             }
         }
 
@@ -89,7 +88,7 @@ class ConnectionTest {
 
         val actual = withContext(CoroutineDataSource(dataSource) + CoroutineConnection(brokenConnection)) {
             withConnection {
-                coroutineContext.connection
+                this
             }
         }
 
@@ -106,7 +105,7 @@ class ConnectionTest {
 
         val actual = withContext(CoroutineDataSource(dataSource) + CoroutineConnection(openConnection)) {
             withConnection {
-                coroutineContext.connection
+                this
             }
         }
 

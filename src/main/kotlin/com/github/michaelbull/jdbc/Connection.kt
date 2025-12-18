@@ -4,8 +4,6 @@ import com.github.michaelbull.jdbc.context.CoroutineConnection
 import com.github.michaelbull.jdbc.context.connection
 import com.github.michaelbull.jdbc.context.dataSource
 import com.github.michaelbull.logging.InlineLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import java.sql.Connection
@@ -19,18 +17,19 @@ import kotlin.coroutines.CoroutineContext
 internal val logger: InlineLogger = InlineLogger()
 
 /**
- * Calls the specified suspending [block] with a [CoroutineConnection] in scope, suspends until it completes, and
- * returns the result.
+ * Calls the specified suspending [block] with a [CoroutineConnection] in the [currentCoroutineContext], suspends until
+ * it completes, and returns the result.
  *
  * When the [currentCoroutineContext] has an [open][hasOpenConnection] [Connection], the specified suspending [block]
- * will be called within a new [coroutineScope].
+ * will be called with the existing [Connection].
  *
  * When the [currentCoroutineContext] has no [Connection], or it [is closed][isClosedCatching], the specified suspending
  * [block] will be called [with the context][withContext] of a new [Connection]. This new [Connection] will be
  * established from the [DataSource] in the [currentCoroutineContext], or throw an [IllegalStateException] if no such
  * [DataSource] exists, and will be [closed][closeCatching] after the specified suspending [block] completes.
  */
-public suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.(connection: Connection) -> T): T {
+@PublishedApi
+internal suspend inline fun <T> withConnection(crossinline block: suspend Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -49,9 +48,7 @@ public suspend inline fun <T> withConnection(crossinline block: suspend Coroutin
             newConnection.closeCatching()
         }
     } else {
-        coroutineScope {
-            block(existingConnection)
-        }
+        block(existingConnection)
     }
 }
 
@@ -60,7 +57,7 @@ public suspend inline fun <T> withConnection(crossinline block: suspend Coroutin
  * its result, then restores [autoCommit][Connection.getAutoCommit] to its original value.
  */
 @PublishedApi
-internal inline fun <T> Connection.withManualCommit(block: () -> T): T {
+internal inline fun <T> Connection.withManualCommit(block: Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -80,7 +77,7 @@ internal inline fun <T> Connection.withManualCommit(block: () -> T): T {
  * result, then restores [readOnly][Connection.isReadOnly] to its original value.
  */
 @PublishedApi
-internal inline fun <T> Connection.withReadOnly(block: () -> T): T {
+internal inline fun <T> Connection.withReadOnly(block: Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -101,7 +98,7 @@ internal inline fun <T> Connection.withReadOnly(block: () -> T): T {
  * [transactionIsolation][Connection.getTransactionIsolation] to its original value.
  */
 @PublishedApi
-internal inline fun <T> Connection.withIsolation(isolationLevel: Int, block: () -> T): T {
+internal inline fun <T> Connection.withIsolation(isolationLevel: Int, block: Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
