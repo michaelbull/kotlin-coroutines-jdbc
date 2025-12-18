@@ -24,7 +24,7 @@ import kotlin.contracts.contract
  * When the [currentCoroutineContext] has a [completed][CoroutineTransaction.completed] [CoroutineTransaction], an
  * [IllegalStateException] will be thrown as the transaction cannot be re-used.
  */
-suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T {
+public suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }

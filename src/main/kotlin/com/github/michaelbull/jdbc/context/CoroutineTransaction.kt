@@ -21,5 +21,7 @@ internal class CoroutineTransaction(
         completed = true
     }
 
-    override fun toString(): String = "CoroutineTransaction(completed=$completed)"
+    override fun toString(): String {
+        return "CoroutineTransaction(completed=$completed)"
+    }
 }

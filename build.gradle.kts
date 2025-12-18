@@ -26,6 +26,7 @@ tasks.withType<Jar> {
 }
 
 kotlin {
+    explicitApi()
     jvmToolchain(8)
 
     compilerOptions {

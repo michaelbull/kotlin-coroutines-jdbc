@@ -4,14 +4,16 @@ import java.sql.Connection
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
-val CoroutineContext.connection: Connection
+public val CoroutineContext.connection: Connection
     get() = get(CoroutineConnection)?.connection ?: error("No connection in context")
 
-class CoroutineConnection(
-    val connection: Connection
+public class CoroutineConnection(
+    public val connection: Connection,
 ) : AbstractCoroutineContextElement(CoroutineConnection) {
 
-    companion object Key : CoroutineContext.Key<CoroutineConnection>
+    public companion object Key : CoroutineContext.Key<CoroutineConnection>
 
-    override fun toString() = "CoroutineConnection($connection)"
+    override fun toString(): String {
+        return "CoroutineConnection($connection)"
+    }
 }

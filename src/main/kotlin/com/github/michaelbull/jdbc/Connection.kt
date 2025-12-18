@@ -16,7 +16,7 @@ import kotlin.contracts.contract
 import kotlin.coroutines.CoroutineContext
 
 @PublishedApi
-internal val logger = InlineLogger()
+internal val logger: InlineLogger = InlineLogger()
 
 /**
  * Calls the specified suspending [block] with a [CoroutineConnection] in scope, suspends until it completes, and
@@ -30,7 +30,7 @@ internal val logger = InlineLogger()
  * established from the [DataSource] in the [currentCoroutineContext], or throw an [IllegalStateException] if no such
  * [DataSource] exists, and will be [closed][closeCatching] after the specified suspending [block] completes.
  */
-suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.() -> T): T {
+public suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -58,7 +58,7 @@ suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.
  * Returns the [Connection] in the [currentCoroutineContext], or throws an [IllegalStateException] if no such
  * [Connection] exists.
  */
-suspend fun currentConnection(): Connection {
+public suspend fun currentConnection(): Connection {
     return currentCoroutineContext().connection
 }
 
