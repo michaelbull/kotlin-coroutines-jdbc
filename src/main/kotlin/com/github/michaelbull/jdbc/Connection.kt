@@ -30,27 +30,89 @@ internal val logger: InlineLogger = InlineLogger()
  * established from the [DataSource] in the [currentCoroutineContext], or throw an [IllegalStateException] if no such
  * [DataSource] exists, and will be [closed][closeCatching] after the specified suspending [block] completes.
  */
-public suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.() -> T): T {
+public suspend inline fun <T> withConnection(crossinline block: suspend CoroutineScope.(connection: Connection) -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
     val ctx = currentCoroutineContext()
+    val existingConnection = ctx[CoroutineConnection]?.connection
 
-    return if (ctx.hasOpenConnection()) {
-        coroutineScope {
-            block()
-        }
-    } else {
-        val connection = ctx.dataSource.connection
+    return if (existingConnection == null || existingConnection.isClosedCatching()) {
+        val newConnection = ctx.dataSource.connection
 
         try {
-            withContext(CoroutineConnection(connection)) {
-                block()
+            withContext(CoroutineConnection(newConnection)) {
+                block(newConnection)
             }
         } finally {
-            connection.closeCatching()
+            newConnection.closeCatching()
         }
+    } else {
+        coroutineScope {
+            block(existingConnection)
+        }
+    }
+}
+
+/**
+ * Disables [autoCommit][Connection.getAutoCommit] mode on this [Connection], calls the specified [block] and returns
+ * its result, then restores [autoCommit][Connection.getAutoCommit] to its original value.
+ */
+@PublishedApi
+internal inline fun <T> Connection.withManualCommit(block: () -> T): T {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+
+    val before = autoCommit
+
+    return try {
+        autoCommit = false
+        block()
+    } finally {
+        autoCommit = before
+    }
+}
+
+/**
+ * Enables [readOnly][Connection.setReadOnly] mode on this [Connection], calls the specified [block] and returns its
+ * result, then restores [readOnly][Connection.isReadOnly] to its original value.
+ */
+@PublishedApi
+internal inline fun <T> Connection.withReadOnly(block: () -> T): T {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+
+    val before = isReadOnly
+
+    return try {
+        isReadOnly = true
+        block()
+    } finally {
+        isReadOnly = before
+    }
+}
+
+/**
+ * Sets [transactionIsolation][Connection.setTransactionIsolation] to the specified [isolationLevel] on this [Connection],
+ * calls the specified [block] and returns its result, then restores
+ * [transactionIsolation][Connection.getTransactionIsolation] to its original value.
+ */
+@PublishedApi
+internal inline fun <T> Connection.withIsolation(isolationLevel: Int, block: () -> T): T {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+
+    val before = transactionIsolation
+
+    return try {
+        transactionIsolation = isolationLevel
+        block()
+    } finally {
+        transactionIsolation = before
     }
 }
 
