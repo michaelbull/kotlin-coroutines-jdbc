@@ -27,8 +27,7 @@ internal val logger: InlineLogger = InlineLogger()
  * established from the [DataSource] in the [currentCoroutineContext], or throw an [IllegalStateException] if no such
  * [DataSource] exists, and will be [closed][closeCatching] after the specified suspending [block] completes.
  */
-@PublishedApi
-internal suspend inline fun <T> withConnection(crossinline block: suspend Connection.() -> T): T {
+public suspend inline fun <T> withConnection(crossinline block: suspend Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -55,8 +54,7 @@ internal suspend inline fun <T> withConnection(crossinline block: suspend Connec
  * Disables [autoCommit][Connection.getAutoCommit] mode on this [Connection], calls the specified [block] and returns
  * its result, then restores [autoCommit][Connection.getAutoCommit] to its original value.
  */
-@PublishedApi
-internal inline fun <T> Connection.withManualCommit(block: Connection.() -> T): T {
+public inline fun <T> Connection.withManualCommit(block: Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -75,8 +73,7 @@ internal inline fun <T> Connection.withManualCommit(block: Connection.() -> T): 
  * Enables [readOnly][Connection.setReadOnly] mode on this [Connection], calls the specified [block] and returns its
  * result, then restores [readOnly][Connection.isReadOnly] to its original value.
  */
-@PublishedApi
-internal inline fun <T> Connection.withReadOnly(block: Connection.() -> T): T {
+public inline fun <T> Connection.withReadOnly(block: Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
@@ -96,8 +93,7 @@ internal inline fun <T> Connection.withReadOnly(block: Connection.() -> T): T {
  * calls the specified [block] and returns its result, then restores
  * [transactionIsolation][Connection.getTransactionIsolation] to its original value.
  */
-@PublishedApi
-internal inline fun <T> Connection.withIsolation(isolationLevel: Int, block: Connection.() -> T): T {
+public inline fun <T> Connection.withIsolation(isolationLevel: Int, block: Connection.() -> T): T {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
