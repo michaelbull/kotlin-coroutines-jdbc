@@ -1,7 +1,6 @@
 package com.github.michaelbull.jdbc
 
 import com.github.michaelbull.jdbc.context.CoroutineTransaction
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import java.sql.Connection
@@ -135,18 +134,14 @@ internal suspend inline fun <T> Connection.commitOrRollback(crossinline block: s
             block()
         }
 
-        withContext(NonCancellable) {
-            commit()
-        }
+        commit()
 
         return result
     } catch (exception: Throwable) {
-        withContext(NonCancellable) {
-            try {
-                rollback()
-            } catch (rollbackException: Throwable) {
-                exception.addSuppressed(rollbackException)
-            }
+        try {
+            rollback()
+        } catch (rollbackException: Throwable) {
+            exception.addSuppressed(rollbackException)
         }
 
         throw exception
