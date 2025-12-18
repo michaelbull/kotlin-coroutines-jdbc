@@ -11,7 +11,6 @@ import java.sql.SQLException
 import javax.sql.DataSource
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
-import kotlin.coroutines.CoroutineContext
 
 @PublishedApi
 internal val logger: InlineLogger = InlineLogger()
@@ -20,8 +19,8 @@ internal val logger: InlineLogger = InlineLogger()
  * Calls the specified suspending [block] with a [CoroutineConnection] in the [currentCoroutineContext], suspends until
  * it completes, and returns the result.
  *
- * When the [currentCoroutineContext] has an [open][hasOpenConnection] [Connection], the specified suspending [block]
- * will be called with the existing [Connection].
+ * When the [currentCoroutineContext] has an open [Connection], the specified suspending [block] will be called with
+ * the existing [Connection].
  *
  * When the [currentCoroutineContext] has no [Connection], or it [is closed][isClosedCatching], the specified suspending
  * [block] will be called [with the context][withContext] of a new [Connection]. This new [Connection] will be
@@ -119,16 +118,6 @@ internal inline fun <T> Connection.withIsolation(isolationLevel: Int, block: Con
  */
 public suspend fun currentConnection(): Connection {
     return currentCoroutineContext().connection
-}
-
-/**
- * Returns `true` if this [CoroutineContext] contains a [Connection] that is not [closed][isClosedCatching],
- * otherwise `false`.
- */
-@PublishedApi
-internal fun CoroutineContext.hasOpenConnection(): Boolean {
-    val connection = get(CoroutineConnection)?.connection
-    return connection != null && !connection.isClosedCatching()
 }
 
 /**
