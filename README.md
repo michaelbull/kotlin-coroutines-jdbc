@@ -27,18 +27,18 @@ dependencies {
 The primary higher-order function exposed by the library is the [`transaction`][transaction] function.
 
 ```kotlin
-suspend inline fun <T> transaction(crossinline block: suspend CoroutineScope.() -> T): T
+suspend inline fun <T> transaction(crossinline block: suspend () -> T): T
 ```
 
 Calling this function with a specific suspending block will run the block in the context of a
 [`CoroutineTransaction`][CoroutineTransaction].
 
-Calls to `transaction` can be nested inside another, with each child re-using the first `CoroutineTransaction`. Only the
-outermost call will either [`commit`][Connection.commit] or [`rollback`][Connection.rollback] the transaction.
+Transactions **cannot be nested**. Calling `transaction` (or any of its variants) within an existing transaction will
+throw an [`IllegalStateException`][IllegalStateException].
 
-Starting a fresh transaction will add a [`CoroutineTransaction`][CoroutineTransaction] to the current
-[`CoroutineContext`][CoroutineContext]. Transactions cannot be re-used after completion and attempting to do so will
-result in a runtime failure.
+Starting a transaction will add a [`CoroutineTransaction`][CoroutineTransaction] to the current
+[`CoroutineContext`][CoroutineContext]. The transaction will either [`commit`][Connection.commit] on success or
+[`rollback`][Connection.rollback] if an exception is thrown.
 
 A transaction will establish a new [`Connection`][Connection] if an open one does not already exist in the active
 [`CoroutineContext`][CoroutineContext]. If the transaction does establish a new [`Connection`][Connection], it will
@@ -46,6 +46,39 @@ attempt to [`close`][Connection.close] it upon completion.
 
 An active [`Connection`][Connection] is accessible via the [`currentConnection`][currentConnection] function, which can
 be used to [prepare statements][Connection.prepareStatement].
+
+### Transaction Variants
+
+The library provides several transaction variants for different use cases:
+
+- **`transaction`** - Standard read-write transaction
+- **`readOnlyTransaction`** - Sets the connection to [read-only mode][Connection.setReadOnly] before starting the
+  transaction
+- **`isolatedTransaction`** - Sets a specific [transaction isolation level][Connection.setTransactionIsolation] before
+  starting the transaction
+- **`isolatedReadOnlyTransaction`** - Combines read-only mode with a specific isolation level
+
+```kotlin
+// Standard transaction
+transaction {
+    // read-write operations
+}
+
+// Read-only transaction (useful for queries that don't modify data)
+readOnlyTransaction {
+    // read-only operations
+}
+
+// Transaction with specific isolation level
+isolatedTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+    // operations with serializable isolation
+}
+
+// Read-only transaction with specific isolation level
+isolatedReadOnlyTransaction(Connection.TRANSACTION_READ_COMMITTED) {
+    // read-only operations with read committed isolation
+}
+```
 
 ## Example
 
@@ -72,11 +105,9 @@ class Example(dataSource: DataSource) {
         customers.forEach(::println)
     }
 
-    private suspend fun addThenFindAllCustomers(): List<String> {
-        return transaction {
-            customers.add("John Doe")
-            customers.findAll()
-        }
+    private suspend fun addThenFindAllCustomers(): List<String> = transaction {
+        customers.add("John Doe")
+        customers.findAll()
     }
 }
 
@@ -89,18 +120,14 @@ class CustomerRepository {
         }
     }
 
-    suspend fun findAll(): List<String> {
-        val customers = mutableListOf<String>()
-
-        currentConnection().prepareStatement("SELECT name FROM customers").use { stmt ->
+    suspend fun findAll() = buildList<String> {
+        urrentConnection().prepareStatement("SELECT name FROM customers").use { stmt ->
             stmt.executeQuery().use { rs ->
                 while (rs.next()) {
-                    customers += rs.getString("name")
+                    add(rs.getString("name"))
                 }
             }
         }
-
-        return customers
     }
 }
 ```
@@ -128,10 +155,13 @@ information and licensing terms.
 [CoroutineTransaction]: https://github.com/michaelbull/kotlin-coroutines-jdbc/blob/master/src/main/kotlin/com/github/michaelbull/jdbc/context/CoroutineTransaction.kt
 [Connection.commit]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#commit--
 [Connection.rollback]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#rollback--
+[Connection.setReadOnly]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#setReadOnly-boolean-
+[Connection.setTransactionIsolation]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#setTransactionIsolation-int-
 [CoroutineContext]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/
 [Connection]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html
 [Connection.close]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#close--
 [currentConnection]: https://github.com/michaelbull/kotlin-coroutines-jdbc/blob/master/src/main/kotlin/com/github/michaelbull/jdbc/Connection.kt
 [Connection.prepareStatement]: https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#prepareStatement-java.lang.String-
+[IllegalStateException]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-state-exception/
 [github]: https://github.com/michaelbull/kotlin-coroutines-jdbc
 [//]: # (@formatter:on)
