@@ -1,0 +1,12 @@
+name: Setup
+description: Setup Mise and Gradle
+
+runs:
+  using: composite
+
+  steps:
+    - name: Setup Mise
+      uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3.5.1
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
