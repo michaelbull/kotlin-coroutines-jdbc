@@ -121,7 +121,7 @@ class CustomerRepository {
     }
 
     suspend fun findAll() = buildList<String> {
-        urrentConnection().prepareStatement("SELECT name FROM customers").use { stmt ->
+        currentConnection().prepareStatement("SELECT name FROM customers").use { stmt ->
             stmt.executeQuery().use { rs ->
                 while (rs.next()) {
                     add(rs.getString("name"))
