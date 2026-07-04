@@ -2,6 +2,7 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.benmanes.gradle.versions.updates.gradle.GradleReleaseChannel
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinJvm
+import com.vanniktech.maven.publish.SourcesJar
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -49,7 +50,7 @@ mavenPublishing {
     configure(
         KotlinJvm(
             javadocJar = JavadocJar.Empty(),
-            sourcesJar = true,
+            sourcesJar = SourcesJar.Sources(),
         )
     )
 
