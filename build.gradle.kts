@@ -32,6 +32,7 @@ kotlin {
 
     compilerOptions {
         optIn.add("kotlin.contracts.ExperimentalContracts")
+        freeCompilerArgs.add("-Xreturn-value-checker=full")
     }
 }
 
